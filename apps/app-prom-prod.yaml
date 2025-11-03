@@ -29,6 +29,21 @@ spec:
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
     path: alerting
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/images
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/storage
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/ingress
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/certmanager
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/hpa
   syncPolicy:
     automated:
       prune: true
@@ -37,4 +52,3 @@ spec:
     - CreateNamespace=true
     - ApplyOutOfSyncOnly=true
     - ServerSideApply=true
-    - Replace=true

@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-hpa-maxed-out
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: hpa.maxed.rules
+    rules:
+    - alert: HPAMaxedOut
+      expr: max by (namespace,hpa) (kube_hpa_status_current_replicas) == max by (namespace,hpa) (kube_hpa_spec_max_replicas)
+      for: 10m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "HPA op max replicas: {{ $labels.namespace }}/{{ $labels.hpa }}"
+        description: "Schaal limiet bereikt. Onderzoek resources/requests of verhoog maxReplicas."
+

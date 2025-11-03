@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-ingress-5xx-rate
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: ingress.5xx.rules
+    rules:
+    - alert: IngressHigh5xx
+      expr: |
+        (sum by (ingress,namespace) (rate(nginx_ingress_controller_requests{status=~"5.."}[5m]))
+        /
+        sum by (ingress,namespace) (rate(nginx_ingress_controller_requests[5m]))) > 0.05
+      for: 10m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "Ingress 5xx >5%: {{ $labels.namespace }}/{{ $labels.ingress }}"
+        description: "Onderzoek backend fouten, timeouts of configuratie."
+

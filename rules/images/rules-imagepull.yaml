@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-image-pull-errors
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: pods.imagepull.rules
+    rules:
+    - alert: ImagePullError
+      expr: sum by (namespace,pod,container) (kube_pod_container_status_waiting_reason{reason=~"ErrImagePull|ImagePullBackOff"} == 1) > 0
+      for: 10m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "Image pull error: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }})"
+        description: "Controleer image naam/tag, registry-credentials en netwerk-bereikbaarheid."
+

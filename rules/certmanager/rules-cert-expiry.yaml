@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-cert-expiring-soon
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: certmanager.expiry.rules
+    rules:
+    - alert: CertificateExpiringSoon
+      expr: (certmanager_certificate_expiration_timestamp_seconds - time()) < 14 * 24 * 3600
+      for: 60m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "Cert verloopt binnen 14d: {{ $labels.name }} ({{ $labels.namespace }})"
+        description: "Controleer cert-manager Issuer/Challenge en hernieuwing."
+
