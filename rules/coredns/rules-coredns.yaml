@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-coredns
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: coredns.health
+    rules:
+    - alert: CoreDNSNotReady
+      expr: sum by (pod) (coredns_health_request_duration_seconds_count{job="kube-dns"} == 0) > 0
+      for: 5m
+      labels: { severity: warning }
+      annotations:
+        summary: "CoreDNS health endpoint niet bereikbaar ({{ $labels.pod }})"
+        description: "Controleer CoreDNS pods, endpoints en Corefile."

@@ -1,0 +1,20 @@
+prometheus:
+  prometheusSpec:
+    evaluationInterval: 30s
+    scrapeInterval: 30s
+    ruleSelector:
+      matchLabels:
+        release: mon
+    ruleNamespaceSelector: {}
+alertmanager:
+  configMapOverrideName: mon-kube-prometheus-stack-alertmanager
+  alertmanagerSpec:
+    replicas: 2
+    secrets:
+    - alertmanager-slack-webhook
+grafana:
+  enabled: true
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard

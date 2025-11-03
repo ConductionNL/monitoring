@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-createcontainerconfigerror
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: createcontainerconfigerror.rules
+    rules:
+    - alert: CreateContainerConfigError
+      expr: sum by (namespace,pod,container)(kube_pod_container_status_waiting_reason{reason="CreateContainerConfigError"} == 1) > 0
+      for: 5m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "CreateContainerConfigError: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }})"
+        description: "Controleer imagePullSecrets, env/secret/volume/args."
