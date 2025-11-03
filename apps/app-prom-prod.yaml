@@ -13,6 +13,7 @@ spec:
     chart: kube-prometheus-stack
     targetRevision: 77.5.0
     helm:
+      skipCrds: true
       releaseName: mon
       valueFiles:
       - $values/overlays/prod/values-prom-stack.yaml
@@ -36,3 +37,4 @@ spec:
     - CreateNamespace=true
     - ApplyOutOfSyncOnly=true
     - ServerSideApply=true
+    - Replace=true
