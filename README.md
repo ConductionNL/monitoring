@@ -1,10 +1,12 @@
 # Monitoring GitOps (private repo) — Starter
 
-**Stack**: Argo CD + kube-prometheus-stack (Prometheus Operator) + Alertmanager + (optioneel) Grafana.
+**Stack**: Argo CD (multiple sources) + kube-prometheus-stack (Prometheus Operator) + Alertmanager + (optioneel) Grafana.
 **Secrets**: SOPS (age). Repo is **private**; geen plaintext secrets.
 
 ## Inhoud
-- `overlays/prod`: Kustomize overlay met losse resources (rules, alerting) naast de Helm chart (via Argo CD multiple sources).
+- `overlays/prod/values-prom-stack.yaml`: Helm values voor `kube-prometheus-stack`.
+- `rules/`: Losse `PrometheusRule` CRD's (met label `release: mon`).
+- `alerting/`: Alertmanager ConfigMap en SOPS-secret voor Slack.
 - `rules/`: Losse `PrometheusRule` CRD's. Labels bevatten `release: mon` voor selector-match.
 - `alerting/alertmanager.yaml`: Alertmanager routes/receivers (zonder secret).
 - `alerting/secret-alertmanager.sops.yaml`: **SOPS-versleuteld** geheim (Slack webhook). Wordt lokaal gegenereerd via het bootstrap-script.
@@ -40,7 +42,7 @@
    open http://127.0.0.1:9093
    ```
 
-6. **Notes**: Single-cluster setup (alleen `overlays/prod`).
+6. **Notes**: Single-cluster setup; Argo CD multiple sources (Helm + directories voor `rules/` en `alerting/`).
 
 ## Belangrijke keuzes
 - Repo is private; alle secrets via SOPS. Geen GitHub Secrets gebruiken voor Argo.

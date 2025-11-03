@@ -16,12 +16,18 @@ spec:
       releaseName: mon
       valueFiles:
       - $values/overlays/prod/values-prom-stack.yaml
-  - repoURL: https://github.com/ConductionNL/monitoring
+  - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
     ref: values
-  - repoURL: https://github.com/ConductionNL/monitoring
+  - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: overlays/prod
+    path: rules/coredns
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: rules/pods
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: alerting
   syncPolicy:
     automated:
       prune: true
@@ -29,3 +35,4 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ApplyOutOfSyncOnly=true
+    - ServerSideApply=true
