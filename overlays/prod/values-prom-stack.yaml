@@ -22,5 +22,6 @@ grafana:
       label: grafana_dashboard
 prometheusOperator:
   admissionWebhooks:
+    enabled: false
     patch:
       enabled: false
