@@ -21,6 +21,10 @@ alertmanager:
       - matchers: ["severity=info"]
         receiver: blackhole
         continue: false
+      - matchers: ["alertname=KubeClientCertificateExpiration"]
+        receiver: team-platform-slack
+        repeat_interval: 24h
+        continue: false
       - matchers: ["alertname=CreateContainerConfigError"]
         receiver: ops-autofix
         continue: true
