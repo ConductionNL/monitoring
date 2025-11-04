@@ -15,16 +15,37 @@ alertmanager:
       group_interval: 2m
       repeat_interval: 2h
       routes:
+      - matchers: ["alertname=InfoInhibitor"]
+        receiver: blackhole
+        continue: false
+      - matchers: ["severity=info"]
+        receiver: blackhole
+        continue: false
       - matchers: ["alertname=CreateContainerConfigError"]
         receiver: ops-autofix
         continue: true
     receivers:
+    - name: blackhole
     - name: team-platform-slack
       slack_configs:
       - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
         title: '{{ template "slack.mon.title" . }}'
         title_link: '{{ template "slack.mon.titlelink" . }}'
         text: '{{ template "slack.mon.text" . }}'
+        footer: '{{ template "slack.mon.footer" . }}'
+        fields:
+        - title: Namespace
+          value: '{{ .CommonLabels.namespace | default "-" }}'
+          short: true
+        - title: Pod
+          value: '{{ .CommonLabels.pod | default "-" }}'
+          short: true
+        - title: Container
+          value: '{{ .CommonLabels.container | default "-" }}'
+          short: true
+        - title: Node
+          value: '{{ .CommonLabels.node | default "-" }}'
+          short: true
         send_resolved: true
     - name: ops-autofix
       webhook_configs:
@@ -38,8 +59,9 @@ alertmanager:
   templateFiles:
     slack.tmpl: |
       {{ define "slack.mon.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
-      {{ define "slack.mon.titlelink" }}https://github.com/ConductionNL/monitoring/blob/main/doc/rules/{{ .CommonLabels.alertname }}.md{{ end }}
-      {{ define "slack.mon.text" }}Namespace: {{ .CommonLabels.namespace }} • Pod: {{ .CommonLabels.pod }} • Container: {{ .CommonLabels.container }}{{ end }}
+      {{ define "slack.mon.titlelink" }}{{ if .CommonAnnotations.runbook_url }}{{ .CommonAnnotations.runbook_url }}{{ else }}https://github.com/ConductionNL/monitoring/blob/main/doc/rules/{{ .CommonLabels.alertname }}.md{{ end }}{{ end }}
+      {{ define "slack.mon.text" }}{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}{{ end }}
+      {{ define "slack.mon.footer" }}severity={{ .CommonLabels.severity | default "-" }} • receiver={{ .Receiver }}{{ end }}
 grafana:
   enabled: true
   sidecar:
