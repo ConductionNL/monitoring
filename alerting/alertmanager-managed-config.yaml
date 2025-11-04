@@ -40,24 +40,24 @@ stringData:
         text: '{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}'
         fields:
         - title: Namespace
-          value: '{{ .CommonLabels.namespace | default "-" }}'
+          value: '{{ if .CommonLabels.namespace }}{{ .CommonLabels.namespace }}{{ else }}-{{ end }}'
           short: true
         - title: Pod
-          value: '{{ .CommonLabels.pod | default "-" }}'
+          value: '{{ if .CommonLabels.pod }}{{ .CommonLabels.pod }}{{ else }}-{{ end }}'
           short: true
         - title: Container
-          value: '{{ .CommonLabels.container | default "-" }}'
+          value: '{{ if .CommonLabels.container }}{{ .CommonLabels.container }}{{ else }}-{{ end }}'
           short: true
         - title: Node
-          value: '{{ .CommonLabels.node | default "-" }}'
+          value: '{{ if .CommonLabels.node }}{{ .CommonLabels.node }}{{ else }}-{{ end }}'
           short: true
         - title: Instance
-          value: '{{ .CommonLabels.instance | default "-" }}'
+          value: '{{ if .CommonLabels.instance }}{{ .CommonLabels.instance }}{{ else }}-{{ end }}'
           short: true
         - title: Job
-          value: '{{ .CommonLabels.job | default "-" }}'
+          value: '{{ if .CommonLabels.job }}{{ .CommonLabels.job }}{{ else }}-{{ end }}'
           short: true
-        footer: 'severity={{ .CommonLabels.severity | default "-" }} • receiver={{ .Receiver }}'
+        footer: 'severity={{ if .CommonLabels.severity }}{{ .CommonLabels.severity }}{{ else }}-{{ end }} • receiver={{ .Receiver }}'
         send_resolved: true
     - name: ops-autofix
       webhook_configs:
