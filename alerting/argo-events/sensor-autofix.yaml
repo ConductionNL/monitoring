@@ -4,6 +4,7 @@ metadata:
   name: alertmanager-autofix
   namespace: argo-events
 spec:
+  eventBusName: default
   template:
     serviceAccountName: events-sensor
   dependencies:

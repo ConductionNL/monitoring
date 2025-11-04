@@ -4,6 +4,7 @@ metadata:
   name: alertmanager
   namespace: argo-events
 spec:
+  eventBusName: default
   service:
     ports:
     - port: 12000
@@ -12,4 +13,5 @@ spec:
     alertmanager:
       port: "12000"
       endpoint: /alertmanager
+      method: POST
 

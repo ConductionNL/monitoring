@@ -26,5 +26,5 @@ data:
         send_resolved: true
     - name: ops-autofix
       webhook_configs:
-      - url: http://alertmanager.argo-events.svc.cluster.local:12000/alertmanager
+      - url: http://alertmanager-eventsource-svc.argo-events.svc.cluster.local:12000/alertmanager
         send_resolved: false
