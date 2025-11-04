@@ -7,11 +7,31 @@ prometheus:
         release: mon
     ruleNamespaceSelector: {}
 alertmanager:
-  configMapOverrideName: mon-kube-prometheus-stack-alertmanager
+  config:
+    route:
+      receiver: team-platform-slack
+      group_by: [namespace, alertname]
+      group_wait: 10s
+      group_interval: 2m
+      repeat_interval: 2h
+      routes:
+      - matchers: ["alertname=CreateContainerConfigError"]
+        receiver: ops-autofix
+        continue: true
+    receivers:
+    - name: team-platform-slack
+      slack_configs:
+      - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
+        send_resolved: true
+    - name: ops-autofix
+      webhook_configs:
+      - url: http://alertmanager-eventsource-svc.argo-events.svc.cluster.local:12000/alertmanager
+        send_resolved: false
   alertmanagerSpec:
     replicas: 2
     secrets:
     - alertmanager-slack-webhook
+    logLevel: debug
 grafana:
   enabled: true
   sidecar:
