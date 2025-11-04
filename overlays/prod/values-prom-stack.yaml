@@ -21,6 +21,9 @@ alertmanager:
       - matchers: ["severity=info"]
         receiver: blackhole
         continue: false
+      - matchers: ["alertname=DeploymentUnhealthy"]
+        receiver: ops-autofix
+        continue: true
       - matchers: ["alertname=KubeClientCertificateExpiration"]
         receiver: team-platform-slack
         repeat_interval: 24h

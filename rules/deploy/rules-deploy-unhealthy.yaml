@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-deployment-unhealthy
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: deployment.health.rules
+    rules:
+    - alert: DeploymentUnhealthy
+      expr: sum by (namespace, deployment) (kube_deployment_status_replicas_unavailable) > 0
+      for: 1m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "Deployment unhealthy: {{ $labels.namespace }}/{{ $labels.deployment }}"
+        description: "Replicas unavailable; investigate rollout, pods and events."
+

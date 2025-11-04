@@ -68,4 +68,45 @@ spec:
             dependencyName: am
             dataKey: body.alerts.0.labels.pod
           dest: spec.template.spec.containers.0.env.1.value
+  - template:
+      name: restart-deployment
+      k8s:
+        operation: create
+        source:
+          resource:
+            apiVersion: batch/v1
+            kind: Job
+            metadata:
+              generateName: autofix-restart-deploy-
+              namespace: monitoring
+            spec:
+              ttlSecondsAfterFinished: 120
+              template:
+                spec:
+                  serviceAccountName: kubectl-runner
+                  restartPolicy: Never
+                  containers:
+                  - name: kubectl
+                    image: registry.k8s.io/kubectl:v1.30.0
+                    command: ["bash","-ceu","--"]
+                    args:
+                    - |
+                      echo "Restarting Deployment NS=$NS DEPLOYMENT=$DEPLOYMENT";
+                      [ -z "$NS" ] && echo "Missing NS" && exit 0;
+                      [ -z "$DEPLOYMENT" ] && echo "Missing DEPLOYMENT" && exit 0;
+                      kubectl -n "$NS" rollout restart deploy "$DEPLOYMENT" || true
+                    env:
+                    - name: NS
+                      value: ""
+                    - name: DEPLOYMENT
+                      value: ""
+        parameters:
+        - src:
+            dependencyName: am
+            dataKey: body.alerts.0.labels.namespace
+          dest: spec.template.spec.containers.0.env.0.value
+        - src:
+            dependencyName: am
+            dataKey: body.alerts.0.labels.deployment
+          dest: spec.template.spec.containers.0.env.1.value
 
