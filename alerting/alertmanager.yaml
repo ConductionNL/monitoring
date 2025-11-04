@@ -21,8 +21,7 @@ data:
     receivers:
     - name: team-platform-slack
       slack_configs:
-      - channel: "#k8s-alerts"
-        api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
+      - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
         send_resolved: true
     - name: ops-autofix
       webhook_configs:
