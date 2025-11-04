@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-managed-config
+  namespace: monitoring
+  labels:
+    managed-by: alertmanager
+stringData:
+  alertmanager.yaml: |
+    route:
+      receiver: team-platform-slack
+      group_by: [namespace, alertname]
+      group_wait: 10s
+      group_interval: 2m
+      repeat_interval: 2h
+      routes:
+      - matchers: ["alertname=InfoInhibitor"]
+        receiver: blackhole
+        continue: false
+      - matchers: ["severity=info"]
+        receiver: blackhole
+        continue: false
+      - matchers: ["alertname=KubeClientCertificateExpiration"]
+        receiver: team-platform-slack
+        repeat_interval: 24h
+        continue: false
+      - matchers: ["alertname=DeploymentUnhealthy"]
+        receiver: ops-autofix
+        continue: true
+      - matchers: ["alertname=CreateContainerConfigError"]
+        receiver: ops-autofix
+        continue: true
+    receivers:
+    - name: blackhole
+    - name: team-platform-slack
+      slack_configs:
+      - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        title_link: '{{ if .CommonAnnotations.runbook_url }}{{ .CommonAnnotations.runbook_url }}{{ else }}https://github.com/ConductionNL/monitoring/blob/main/doc/rules/{{ .CommonLabels.alertname }}.md{{ end }}'
+        text: '{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}'
+        fields:
+        - title: Namespace
+          value: '{{ .CommonLabels.namespace | default "-" }}'
+          short: true
+        - title: Pod
+          value: '{{ .CommonLabels.pod | default "-" }}'
+          short: true
+        - title: Container
+          value: '{{ .CommonLabels.container | default "-" }}'
+          short: true
+        - title: Node
+          value: '{{ .CommonLabels.node | default "-" }}'
+          short: true
+        - title: Instance
+          value: '{{ .CommonLabels.instance | default "-" }}'
+          short: true
+        - title: Job
+          value: '{{ .CommonLabels.job | default "-" }}'
+          short: true
+        footer: 'severity={{ .CommonLabels.severity | default "-" }} • receiver={{ .Receiver }}'
+        send_resolved: true
+    - name: ops-autofix
+      webhook_configs:
+      - url: http://alertmanager-eventsource-svc.argo-events.svc.cluster.local:12000/alertmanager
+        send_resolved: false
+

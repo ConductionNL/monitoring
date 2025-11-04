@@ -63,6 +63,7 @@ alertmanager:
     secrets:
     - alertmanager-slack-webhook
     logLevel: debug
+    configSecret: alertmanager-managed-config
   templateFiles:
     slack.tmpl: |
       {{ define "slack.mon.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
