@@ -4,6 +4,7 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 
 ## Inhoud
 - CoreDNS: zie `rules/CoreDNSNotReady.md`
+- CoreDNS (extended): zie `rules/CoreDNSExtended.md`
 - Pods: zie `rules/CreateContainerConfigError.md`
 
 ## Waar regels vandaan komen

@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: alertmanager-autofix
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: events-sensor
+  dependencies:
+  - name: am
+    eventSourceName: alertmanager
+    eventName: alertmanager
+  triggers:
+  - template:
+      name: restart-parent
+      k8s:
+        operation: create
+        source:
+          resource:
+            apiVersion: batch/v1
+            kind: Job
+            metadata:
+              generateName: autofix-restart-
+              namespace: monitoring
+            spec:
+              ttlSecondsAfterFinished: 120
+              template:
+                spec:
+                  serviceAccountName: kubectl-runner
+                  restartPolicy: Never
+                  containers:
+                  - name: kubectl
+                    image: bitnami/kubectl:1.30
+                    command: ["bash","-ceu","--"]
+                    args:
+                    - |
+                      echo "Event received";
+                      echo "NS=$NS POD=$POD";
+                      if [ -z "$NS" ] || [ -z "$POD" ]; then
+                        echo "Missing NS/POD from alert"; exit 0;
+                      fi
+                      OWNER_KIND=$(kubectl -n "$NS" get pod "$POD" -o jsonpath='{.metadata.ownerReferences[0].kind}' || true)
+                      OWNER_NAME=$(kubectl -n "$NS" get pod "$POD" -o jsonpath='{.metadata.ownerReferences[0].name}' || true)
+                      if [ "$OWNER_KIND" = "ReplicaSet" ]; then
+                        DEP=$(kubectl -n "$NS" get rs "$OWNER_NAME" -o jsonpath='{.metadata.ownerReferences[0].name}' || true)
+                        if [ -n "$DEP" ]; then
+                          kubectl -n "$NS" rollout restart deploy "$DEP" || true
+                          exit 0
+                        fi
+                      fi
+                      if [ "$OWNER_KIND" = "StatefulSet" ]; then
+                        kubectl -n "$NS" rollout restart statefulset "$OWNER_NAME" || true
+                        exit 0
+                      fi
+                      kubectl -n "$NS" delete pod "$POD" --wait=false || true
+                    env:
+                    - name: NS
+                      value: ""
+                    - name: POD
+                      value: ""
+        parameters:
+        - src:
+            dependencyName: am
+            dataKey: body.alerts.0.labels.namespace
+          dest: spec.template.spec.containers.0.env.0.value
+        - src:
+            dependencyName: am
+            dataKey: body.alerts.0.labels.pod
+          dest: spec.template.spec.containers.0.env.1.value
+

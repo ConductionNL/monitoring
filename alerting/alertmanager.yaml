@@ -13,9 +13,18 @@ data:
       group_wait: 10s
       group_interval: 2m
       repeat_interval: 2h
+      routes:
+      - matchers:
+        - alertname = CreateContainerConfigError
+        receiver: ops-autofix
+        continue: true
     receivers:
     - name: team-platform-slack
       slack_configs:
       - channel: "#k8s-alerts"
         api_url_file: /etc/alertmanager/secrets/slack_webhook
         send_resolved: true
+    - name: ops-autofix
+      webhook_configs:
+      - url: http://alertmanager.argo-events.svc.cluster.local:12000/alertmanager
+        send_resolved: false

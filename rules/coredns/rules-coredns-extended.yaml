@@ -1,0 +1,65 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-coredns-extended
+  namespace: monitoring
+  labels:
+    release: mon
+spec:
+  groups:
+  - name: coredns.health
+    rules:
+    - alert: CoreDNSDeploymentUnavailable
+      expr: kube_deployment_status_replicas_unavailable{namespace="kube-system",deployment=~"coredns.*"} > 0
+      for: 5m
+      labels: { severity: critical, team: platform }
+      annotations:
+        summary: "CoreDNS unavailable replicas"
+        description: "CoreDNS heeft {{ $value }} onbeschikbare replicas >5m."
+
+    - alert: CoreDNSPodRestarts
+      expr: sum(increase(kube_pod_container_status_restarts_total{namespace="kube-system",pod=~"coredns-.*"}[10m])) > 3
+      for: 5m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "CoreDNS herstarts"
+        description: "CoreDNS containers restart >3 in 10m."
+
+    - alert: CoreDNSServfailRateHigh
+      expr: |
+        (sum(rate(coredns_dns_responses_total{rcode="SERVFAIL"}[5m])) /
+         sum(rate(coredns_dns_responses_total[5m]))) > 0.01
+      for: 5m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "SERVFAIL rate hoog"
+        description: "SERVFAIL >1% over 5m."
+
+    - alert: CoreDNSRefusedRateHigh
+      expr: |
+        (sum(rate(coredns_dns_responses_total{rcode="REFUSED"}[5m])) /
+         sum(rate(coredns_dns_responses_total[5m]))) > 0.05
+      for: 10m
+      labels: { severity: info, team: platform }
+      annotations:
+        summary: "REFUSED rate hoog"
+        description: "REFUSED >5% over 10m; check upstream/config."
+
+  - name: k8s.change_indicators
+    rules:
+    - alert: CoreDNSConfigRecreatedRecently
+      expr: time() - kube_configmap_created{namespace="kube-system",configmap="coredns"} < 600
+      for: 1m
+      labels: { severity: info, team: platform }
+      annotations:
+        summary: "coredns ConfigMap recreatie"
+        description: "ConfigMap kube-system/coredns opnieuw aangemaakt (<10m)."
+
+    - alert: KubeSystemDeploymentRolledOut
+      expr: changes(kube_deployment_status_observed_generation{namespace="kube-system"}[10m]) > 0
+      for: 1m
+      labels: { severity: info, team: platform }
+      annotations:
+        summary: "Deployment change in kube-system"
+        description: "Nieuwe observed generation ({{ $labels.deployment }})."
+
