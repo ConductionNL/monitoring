@@ -10,7 +10,7 @@ spec:
     rules:
     - alert: CreateContainerConfigError
       expr: sum by (namespace,pod,container)(kube_pod_container_status_waiting_reason{reason="CreateContainerConfigError"} > 0) > 0
-      for: 5m
+      for: 1m
       labels: { severity: warning, team: platform }
       annotations:
         summary: "CreateContainerConfigError: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }})"
