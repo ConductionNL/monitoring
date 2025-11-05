@@ -28,6 +28,10 @@ alertmanager:
         receiver: team-platform-slack
         repeat_interval: 24h
         continue: false
+      - matchers: ["alertname=NodeDiskIOSaturation"]
+        receiver: team-platform-slack
+        repeat_interval: 24h
+        continue: false
       - matchers: ["alertname=CreateContainerConfigError"]
         receiver: ops-autofix
         continue: true
