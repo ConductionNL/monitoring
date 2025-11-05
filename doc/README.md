@@ -37,3 +37,17 @@ kubectl -n monitoring port-forward svc/mon-grafana 3000:80
 # open http://127.0.0.1:3000 (user/pass via Secret grafana-admin)
 ```
 
+### Connectivity tests (handmatig)
+- Slack smoke (gebruikt bestaand Secret):
+  ```bash
+  kubectl -n monitoring create -f tests/connectivity/job-slack-smoke.yaml
+  kubectl -n monitoring wait --for=condition=complete job -l app=connectivity-smoke --timeout=120s
+  ```
+- Egress/DNS check:
+  ```bash
+  kubectl -n monitoring create -f tests/connectivity/job-egress-dns.yaml
+  kubectl -n monitoring wait --for=condition=complete job -l app=connectivity-smoke --timeout=120s
+  ```
+
+Opmerking: een automatische CI-run na push is voorlopig uitgeschakeld i.v.m. roterende kubeconfig. Zie `doc/ROADMAP.md` voor het plan (ServiceAccount + stabiel kubeconfig-secret voor CI).
+
