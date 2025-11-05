@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: smoke-slack-
+  namespace: monitoring
+  labels:
+    app: connectivity-smoke
+spec:
+  ttlSecondsAfterFinished: 120
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: curl
+        image: curlimages/curl:8.7.1
+        command: ["sh","-lc"]
+        args:
+        - |
+          URL=$(cat /secrets/slack_webhook);
+          echo "Posting Slack smoke...";
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-type: application/json' \
+                 --data '{"text":"Connectivity smoke from cluster $(date -u +%FT%TZ)"}' "$URL");
+          echo "HTTP $code";
+          [ "$code" = "200" ] || exit 1
+        volumeMounts:
+        - name: slack
+          mountPath: /secrets
+          readOnly: true
+      volumes:
+      - name: slack
+        secret:
+          secretName: alertmanager-slack-webhook
+

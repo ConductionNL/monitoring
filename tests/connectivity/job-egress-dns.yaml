@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: smoke-egress-
+  namespace: monitoring
+  labels:
+    app: connectivity-smoke
+spec:
+  ttlSecondsAfterFinished: 120
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: net
+        image: curlimages/curl:8.7.1
+        command: ["sh","-lc"]
+        args:
+        - |
+          set -euo pipefail
+          echo "DNS lookup hooks.slack.com"; getent hosts hooks.slack.com >/dev/null
+          echo "DNS lookup github.com"; getent hosts github.com >/dev/null
+          echo "HTTPS github.com"; curl -sSfI https://github.com >/dev/null
+          echo "OK"
+
