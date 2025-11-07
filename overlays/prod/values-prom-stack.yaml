@@ -30,6 +30,7 @@ alertmanager:
         continue: false
       - matchers: ["alertname=NodeDiskIOSaturation"]
         receiver: team-platform-slack
+        group_interval: 30m
         repeat_interval: 24h
         continue: false
       - matchers: ["alertname=CreateContainerConfigError"]
@@ -87,3 +88,24 @@ prometheusOperator:
     enabled: false
     patch:
       enabled: false
+additionalServiceMonitors:
+  - name: kube-proxy
+    namespace: monitoring
+    labels:
+      release: mon
+    endpoints:
+      - port: metrics
+        scheme: http
+        interval: 30s
+        scrapeTimeout: 10s
+        relabelings:
+          - action: replace
+            targetLabel: job
+            replacement: kube-proxy
+    namespaceSelector:
+      matchNames:
+        - kube-system
+    selector:
+      matchLabels:
+        app: kubernetes
+        role: proxy
