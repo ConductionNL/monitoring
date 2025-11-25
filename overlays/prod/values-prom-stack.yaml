@@ -8,7 +8,7 @@ prometheus:
     ruleNamespaceSelector: {}
 defaultRules:
   disabled:
-    - KubeClientCertificateExpiration
+    KubeClientCertificateExpiration: true
 alertmanager:
   config:
     route:
