@@ -9,6 +9,8 @@ prometheus:
 defaultRules:
   disabled:
     KubeClientCertificateExpiration: true
+    KubeletServerCertificateExpiration: true
+    KubeletClientCertificateExpiration: true
 alertmanager:
   config:
     route:
