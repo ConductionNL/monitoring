@@ -6,6 +6,9 @@ prometheus:
       matchLabels:
         release: mon
     ruleNamespaceSelector: {}
+defaultRules:
+  disabled:
+    - KubeClientCertificateExpiration
 alertmanager:
   config:
     route:
@@ -24,10 +27,6 @@ alertmanager:
       - matchers: ["alertname=DeploymentUnhealthy"]
         receiver: ops-autofix
         continue: true
-      - matchers: ["alertname=KubeClientCertificateExpiration"]
-        receiver: team-platform-slack
-        repeat_interval: 24h
-        continue: false
       - matchers: ["alertname=NodeDiskIOSaturation"]
         receiver: team-platform-slack
         group_interval: 30m

@@ -21,7 +21,7 @@ stringData:
         receiver: blackhole
         continue: false
       - matchers: ["alertname=KubeClientCertificateExpiration"]
-        receiver: team-platform-slack
+        receiver: blackhole
         repeat_interval: 24h
         continue: false
       - matchers: ["alertname=DeploymentUnhealthy"]
