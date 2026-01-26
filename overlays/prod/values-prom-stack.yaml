@@ -108,7 +108,7 @@ grafana:
       label: grafana_dashboard
 
   persistence:
-    enabled: true
+    enabled: false
     size: 5Gi
 
   resources:
