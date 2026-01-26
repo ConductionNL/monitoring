@@ -24,14 +24,6 @@ stringData:
         receiver: blackhole
         repeat_interval: 24h
         continue: false
-      - matchers: ["alertname=KubeletServerCertificateExpiration"]
-        receiver: blackhole
-        repeat_interval: 24h
-        continue: false
-      - matchers: ["alertname=KubeletClientCertificateExpiration"]
-        receiver: blackhole
-        repeat_interval: 24h
-        continue: false
       - matchers: ["alertname=DeploymentUnhealthy"]
         receiver: ops-autofix
         continue: true

@@ -14,8 +14,7 @@ data:
       group_interval: 2m
       repeat_interval: 2h
       routes:
-      - matchers:
-        - alertname = CreateContainerConfigError
+      - matchers: ["alertname=CreateContainerConfigError"]
         receiver: ops-autofix
         continue: true
     receivers:
