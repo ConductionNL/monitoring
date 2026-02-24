@@ -120,9 +120,9 @@ grafana:
       client_id: grafana
       client_secret: $__file{/etc/grafana/secrets/oauth/GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
       scopes: openid email profile
-      auth_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/auth
-      token_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/token
-      api_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/userinfo
+      auth_url: https://iam.commonground.nu/realms/commonground/protocol/openid-connect/auth
+      token_url: https://iam.commonground.nu/realms/commonground/protocol/openid-connect/token
+      api_url: https://iam.commonground.nu/realms/commonground/protocol/openid-connect/userinfo
       use_pkce: true
       email_attribute_path: email
       login_attribute_path: preferred_username
