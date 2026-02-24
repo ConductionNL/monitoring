@@ -4,28 +4,52 @@ Alle Grafana-configuratie die we willen borgen staat in deze repo. **Secrets** (
 
 ## Keycloak OAuth (Generic OAuth)
 
-Grafana kan aan Keycloak gekoppeld worden voor login. **Standaard staat dit uit** in de values, zodat een push niet breekt als het Secret `grafana-keycloak-oauth` nog niet bestaat.
+Grafana is gekoppeld aan Keycloak voor login. Je **maakt geen nieuwe secrets in Keycloak** – je gebruikt de **client secret die Keycloak al toont** bij je client (realm Grafana, client `grafana`). Die waarde zet je lokaal in `grafana/.env`; het script maakt daar een Kubernetes Secret van zodat Grafana die kan gebruiken.
 
-De **niet-geheime** configuratie staat in Git (nu uitgecommentarieerd in `stack/values.yaml`):
+- **In Git**: `stack/values.yaml` → `grafana.grafana.ini` (auth.generic_oauth met urls, scopes, enz.) en `extraSecretMounts` (Secret als bestanden onder `/etc/grafana/secrets/oauth`). Client_id en client_secret worden uit die bestanden gelezen via `$__file{...}`.
+- **Niet in Git**: de client secret uit Keycloak → in `grafana/.env` → script → K8s Secret `grafana-keycloak-oauth` (keys: `GF_AUTH_GENERIC_OAUTH_CLIENT_ID`, `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET`).
 
-- **Helm values**: `stack/values.yaml` → `grafana.grafana.ini` (server.root_url staat aan; Keycloak-block staat uitgecommentarieerd). Om Keycloak aan te zetten: uncomment de `auth.generic_oauth`-sectie en `envFromSecret: grafana-keycloak-oauth`, maak het Secret (zie hieronder), en sync opnieuw.
-- **Secret**: `client_id` en `client_secret` komen uit een Kubernetes Secret `grafana-keycloak-oauth`, die je lokaal aanmaakt vanuit een **`.env`** bestand (niet committen).
+### Secret uit Keycloak naar het cluster
 
-### Secret uit .env zetten
-
-1. Kopieer het voorbeeldbestand en vul het geheim in:
+1. In Keycloak heb je al: realm Grafana, client `grafana`, client secret (staat in het tabblad Credentials). **Kopieer die secret** – die gebruik je hier.
+2. Lokaal:
    ```bash
    cp grafana/.env.example grafana/.env
-   # Bewerk grafana/.env en zet GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET op de echte waarde
+   # Bewerk grafana/.env: zet GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET op de waarde uit Keycloak (client_id staat al op grafana)
    ```
-2. Maak (of werk bij) het Secret in het cluster:
+3. Maak het Kubernetes Secret (eenmalig, of bij wijziging van de secret):
    ```bash
    ./scripts/grafana-oauth-secret.sh
-   # Optioneel: ./scripts/grafana-oauth-secret.sh <namespace>
    ```
-3. `.env` staat in `.gitignore`; commit het nooit. Voor een nieuw cluster of nieuwe omgeving: opnieuw `.env` vullen en het script draaien.
+4. `.env` staat in `.gitignore`; commit het nooit. Voor een ander cluster: opnieuw dezelfde Keycloak secret in `.env` zetten en het script draaien.
 
-Grafana leest de env vars `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` en `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` uit dit Secret (`envFromSecret` in de values).
+Grafana leest daarna `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` en `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` uit het Secret.
+
+### Keycloak-login zie je niet?
+
+1. **Secret en mount controleren**
+   ```bash
+   kubectl -n monitoring get secret grafana-keycloak-oauth
+   kubectl -n monitoring get deployment mon-grafana -o yaml | grep -A10 extraSecretMounts
+   # of: grep -A5 "oauth-secret\|secrets/oauth"
+   ```
+   De deployment moet een volume hebben dat `grafana-keycloak-oauth` mount op `/etc/grafana/secrets/oauth`. Zo niet: Argo CD opnieuw syncen (values hebben `extraSecretMounts`).
+
+2. **Grafana herstarten** (zodat de pod het Secret laadt)
+   ```bash
+   kubectl -n monitoring rollout restart deployment mon-grafana
+   ```
+   Wacht tot de nieuwe pod Running is, open dan https://grafana.commonground.nu in een **incognitovenster** of hard refresh (Ctrl+Shift+R). Je zou nu **"Sign in with Keycloak"** moeten zien.
+
+3. **Redirect URI in Keycloak**  
+   Bij client `grafana` (realm Grafana) onder **Valid redirect URIs** minimaal:
+   - `https://grafana.commonground.nu/login/generic_oauth`  
+   Onder **Web origins** (indien aanwezig): `https://grafana.commonground.nu` of `+`.
+
+4. **Logs bij login-fout**
+   ```bash
+   kubectl -n monitoring logs -l app.kubernetes.io/name=grafana --tail=100 | grep -i oauth
+   ```
 
 ## Datasource
 

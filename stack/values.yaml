@@ -102,33 +102,31 @@ alertmanager:
 grafana:
   enabled: true
 
-  # Keycloak Generic OAuth – alleen actief als Secret grafana-keycloak-oauth bestaat.
-  # Zonder dat Secret: laat deze twee regels uit of comment ze uit tot je ./scripts/grafana-oauth-secret.sh hebt gedraaid.
-  # envFromSecret: grafana-keycloak-oauth
-  #
-  # grafana.ini (Keycloak): uncomment de onderstaande block + envFromSecret hierboven als Keycloak klaar is.
-  # grafana.ini:
-  #   server:
-  #     root_url: https://grafana.commonground.nu/
-  #   auth.generic_oauth:
-  #     enabled: true
-  #     name: Keycloak
-  #     allow_sign_up: true
-  #     scopes: openid email profile
-  #     auth_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/auth
-  #     token_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/token
-  #     api_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/userinfo
-  #     use_pkce: true
-  #     email_attribute_path: email
-  #     login_attribute_path: preferred_username
-  #     name_attribute_path: name
-  #
-  # client_id en client_secret uit Secret (GF_AUTH_GENERIC_OAUTH_*). Zie grafana/.env.example en grafana/README.md.
+  # Keycloak Generic OAuth – secret als bestanden mounten (werkt wel in deze stack)
+  extraSecretMounts:
+    - name: oauth-secret
+      secretName: grafana-keycloak-oauth
+      defaultMode: 0400
+      mountPath: /etc/grafana/secrets/oauth
+      readOnly: true
 
-  # Zonder Keycloak: basis-root_url (optioneel)
   grafana.ini:
     server:
       root_url: https://grafana.commonground.nu/
+    auth.generic_oauth:
+      enabled: true
+      name: Keycloak
+      allow_sign_up: true
+      client_id: $__file{/etc/grafana/secrets/oauth/GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
+      client_secret: $__file{/etc/grafana/secrets/oauth/GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+      scopes: openid email profile
+      auth_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/auth
+      token_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/token
+      api_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/userinfo
+      use_pkce: true
+      email_attribute_path: email
+      login_attribute_path: preferred_username
+      name_attribute_path: name
 
   # Datasource expliciet in Git (GitOps): Prometheus-URL vastgelegd in values
   # defaultDatasourceEnabled: false om conflict te voorkomen (chart maakt al een default aan)
