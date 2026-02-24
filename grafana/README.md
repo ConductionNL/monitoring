@@ -75,9 +75,7 @@ Geen handmatige configuratie in de Grafana UI nodig; na sync is de datasource be
     - `node-disk-io.yaml` – **NodeDiskIOSaturation**: disk IO queue (aqu-sq), utilization, read/write throughput. Link naar runbook in dashboard.
   - **Overzichten**:
     - `cluster-overview.yaml` – cluster: nodes, namespaces, pods, node CPU/memory, pods per namespace.
-    - `nextcloud-environments.yaml` – Nextcloud-omgevingen: **welke omgevingen we monitoren** kun je op twee manieren instellen:
-      - **Via .env (aanbevolen)**: Zet in `grafana/.env` (gitignored) `NEXTCLOUD_NAMESPACES=nextcloud, nextcloud-data, nextcloud-llm` (komma-gescheiden). Draai daarna `./scripts/grafana-nextcloud-dashboard-apply.sh`; die past het dashboard in het cluster aan met die lijst (zonder de YAML in Git te wijzigen).
-      - **Via Git**: Bewerk in `grafana/dashboards/nextcloud-environments.yaml` de variabele `nextcloud_ns` (query, options, allValue), commit + sync.
+    - `nextcloud-environments.yaml` – Namespace-overzicht: **bovenin het dashboard** kies je in de dropdown welke namespaces je wilt zien (lijst komt uit Prometheus, geen vaste lijst meer nodig). Optioneel: met `NEXTCLOUD_NAMESPACES` in `grafana/.env` en `./scripts/grafana-nextcloud-dashboard-apply.sh` kun je nog een ConfigMap met vaste lijst applyen.
 
 **Kosten/resources:** De dashboards gebruiken alleen metrics die de stack al scrapet (kube-state-metrics, node-exporter, kubelet). Geen extra scrape-targets of significante resourcekosten; alleen extra Prometheus-queries wanneer iemand een dashboard open heeft.
 
