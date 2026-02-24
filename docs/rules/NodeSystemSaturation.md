@@ -51,7 +51,7 @@ Een **load per core van 930** is in de praktijk onrealistisch; een echte machine
 
 5. **Bij onrealistische waarden (bijv. 930)**  
    - In Prometheus voor die instance controleren: `node_load1`, `count(node_cpu_seconds_total{mode="idle"})` (aantal cores).  
-   - Controleren of er relabels of meerdere scrapes zijn die de ratio kapot maken; indien nodig default rule uitzetten tot het is opgelost: `defaultRules.disabled.NodeSystemSaturation: true` in `overlays/prod/values-prom-stack.yaml`.
+   - Controleren of er relabels of meerdere scrapes zijn die de ratio kapot maken; indien nodig default rule uitzetten tot het is opgelost: `defaultRules.disabled.NodeSystemSaturation: true` in `stack/values.yaml`.
 
 ## Verwachte routing
 - Slack via default receiver (`team-platform-slack`).

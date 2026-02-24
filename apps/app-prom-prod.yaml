@@ -16,7 +16,7 @@ spec:
       skipCrds: true
       releaseName: mon
       valueFiles:
-      - $values/overlays/prod/values-prom-stack.yaml
+      - $values/stack/values.yaml
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
     ref: values

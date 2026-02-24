@@ -14,11 +14,11 @@ Alle Prometheus-gerelateerde configuratie staat onder deze directory.
   - `pods/` – Pod pending, CreateContainerConfigError
   - `storage/` – PVC usage
 
-Regels worden door Prometheus opgepikt via `ruleSelector.matchLabels.release: mon` (zie `overlays/prod/values-prom-stack.yaml`).
+Regels worden door Prometheus opgepikt via `ruleSelector.matchLabels.release: mon` (zie `stack/values.yaml`).
 
 ## Scrape-config en overige Prometheus-instellingen
 
-- **Helm values**: `overlays/prod/values-prom-stack.yaml` onder `prometheus.prometheusSpec` (retention, resources, ruleSelector) en `additionalServiceMonitors` voor extra scrape targets.
+- **Helm values**: `stack/values.yaml` onder `prometheus.prometheusSpec` (retention, resources, ruleSelector) en `additionalServiceMonitors` voor extra scrape targets.
 - Er is geen aparte `prometheus.yaml`; de Prometheus Operator genereert de config uit ServiceMonitors en de values.
 
 ## Documentatie per alert

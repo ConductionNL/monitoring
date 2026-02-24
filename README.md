@@ -28,8 +28,9 @@ monitoring/
 │   ├── alertmanager-managed-config.yaml
 │   ├── secret-alertmanager.sops.yaml
 │   └── argo-events/         # Webhook/autofix
-├── overlays/prod/           # Helm values (stack-brede config)
-│   └── values-prom-stack.yaml
+├── stack/                   # Helm values (één monitoring-stack)
+│   ├── README.md
+│   └── values.yaml
 ├── docs/                    # Runbooks, uitleg per alert
 │   ├── README.md
 │   ├── rules/               # Eén .md per alert (Slack linkt hiernaar)
@@ -44,7 +45,7 @@ monitoring/
 ## Inhoud (kort)
 
 - **GitOps**: Argo CD haalt de Helm chart `kube-prometheus-stack` en past jullie values toe. Geen lokaal `helm install`. Zie `apps/app-prom-prod.yaml` voor alle sources (`prometheus/rules/*`, `grafana/dashboards`, `alerting`, values).
-- **Configuratie in Git**: Datasource-URL in `overlays/prod/values-prom-stack.yaml`; dashboards in `grafana/dashboards/`; Prometheus-rules in `prometheus/rules/`; Alertmanager in `alerting/`. Zie `prometheus/README.md` en `grafana/README.md`.
+- **Configuratie in Git**: Stack-values in `stack/values.yaml`; dashboards in `grafana/dashboards/`; Prometheus-rules in `prometheus/rules/`; Alertmanager in `alerting/`. Zie `prometheus/README.md` en `grafana/README.md`.
 - **Secrets**: SOPS (age). Slack webhook in `alerting/secret-alertmanager.sops.yaml`; lokaal genereren via `./bootstrap_sops.sh`.
 
 ## Bootstrap (lokaal, vóór eerste commit)

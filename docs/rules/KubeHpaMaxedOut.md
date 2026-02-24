@@ -10,7 +10,7 @@ Een Horizontal Pod Autoscaler draait al **langer dan 15 minuten** op het maximum
 Je ziet deze alert o.a. als: *"HPA is running at max replicas – HPA kube-system/coredns has been running at max replicas for longer than 15 minutes on cluster"*.
 
 ## Verschil met HPAMaxedOut
-In deze repo staat ook een eigen regel **HPAMaxedOut** (vuurt na 10m). Beide alerts betekenen hetzelfde; de stack-regel vuurt 5 minuten later (15m). Runbook is voor beide hetzelfde. Om alleen onze 10m-regel te gebruiken: in `overlays/prod/values-prom-stack.yaml` onder `defaultRules.disabled` o.a. `KubeHpaMaxedOut: true` zetten.
+In deze repo staat ook een eigen regel **HPAMaxedOut** (vuurt na 10m). Beide alerts betekenen hetzelfde; de stack-regel vuurt 5 minuten later (15m). Runbook is voor beide hetzelfde. Om alleen onze 10m-regel te gebruiken: in `stack/values.yaml` onder `defaultRules.disabled` o.a. `KubeHpaMaxedOut: true` zetten.
 
 ## Trigger (stack)
 - HPA `current_replicas == max_replicas` gedurende **15m** (exacte expressie zit in de Helm chart).

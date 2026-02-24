@@ -6,9 +6,9 @@ Alle Grafana-configuratie die we willen borgen staat in deze repo. **Secrets** (
 
 Grafana kan aan Keycloak gekoppeld worden voor login. **Standaard staat dit uit** in de values, zodat een push niet breekt als het Secret `grafana-keycloak-oauth` nog niet bestaat.
 
-De **niet-geheime** configuratie staat in Git (nu uitgecommentarieerd in `overlays/prod/values-prom-stack.yaml`):
+De **niet-geheime** configuratie staat in Git (nu uitgecommentarieerd in `stack/values.yaml`):
 
-- **Helm values**: `overlays/prod/values-prom-stack.yaml` → `grafana.grafana.ini` (server.root_url staat aan; Keycloak-block staat uitgecommentarieerd). Om Keycloak aan te zetten: uncomment de `auth.generic_oauth`-sectie en `envFromSecret: grafana-keycloak-oauth`, maak het Secret (zie hieronder), en sync opnieuw.
+- **Helm values**: `stack/values.yaml` → `grafana.grafana.ini` (server.root_url staat aan; Keycloak-block staat uitgecommentarieerd). Om Keycloak aan te zetten: uncomment de `auth.generic_oauth`-sectie en `envFromSecret: grafana-keycloak-oauth`, maak het Secret (zie hieronder), en sync opnieuw.
 - **Secret**: `client_id` en `client_secret` komen uit een Kubernetes Secret `grafana-keycloak-oauth`, die je lokaal aanmaakt vanuit een **`.env`** bestand (niet committen).
 
 ### Secret uit .env zetten
@@ -30,7 +30,7 @@ Grafana leest de env vars `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` en `GF_AUTH_GENERIC_
 ## Datasource
 
 - **Prometheus** wordt expliciet in Git gezet via Helm values:
-  - `overlays/prod/values-prom-stack.yaml` → `grafana.sidecar.datasources`
+  - `stack/values.yaml` → `grafana.sidecar.datasources`
   - URL: `http://mon-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090`
 
 Geen handmatige configuratie in de Grafana UI nodig; na sync is de datasource beschikbaar.
@@ -50,8 +50,8 @@ Nieuwe dashboards toevoegen:
 
 ## Prometheus-configuratie (GitOps)
 
-- **Rules**: `prometheus/rules/*` (PrometheusRule CRD’s), geselecteerd via `release: mon` in `values-prom-stack.yaml`.
-- **Scrape-config**: o.a. via `additionalServiceMonitors` in `overlays/prod/values-prom-stack.yaml`.
+- **Rules**: `prometheus/rules/*` (PrometheusRule CRD’s), geselecteerd via `release: mon` in `stack/values.yaml`.
+- **Scrape-config**: o.a. via `additionalServiceMonitors` in `stack/values.yaml`.
 - **Alertmanager**: routing/receivers in `alerting/alertmanager-managed-config.yaml` (Secret) en eventueel values.
 
 Alles wat we willen versioneren staat dus in Git; alleen de Helm chart zelf komt van de community repo.

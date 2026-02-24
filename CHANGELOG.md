@@ -18,9 +18,9 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 - `README.md` — inhoud/documentatie
 - `docs/README.md` — overzicht rules, testen en verwijzing naar CHANGELOG/AGENTS
 - `apps/app-prom-prod.yaml` — Argo CD app configuratie
-- `overlays/prod/values-prom-stack.yaml` — Helm values (o.a. alert routing, runbook-links naar `docs/rules/`)
+- `stack/values.yaml` (voorheen overlays/prod/values-prom-stack.yaml) — Helm values (o.a. alert routing, runbook-links naar `docs/rules/`)
 - `docs/rules/HPAMaxedOut.md` — aanpassingen runbook
-- Verwijzingen `doc/` → `docs/` in o.a. CHANGELOG, docs/AGENTS.md, .cursor/rules, docs/README.md, docs/ROADMAP.md, docs/alerting.md, docs/rules/HPAMaxedOut.md, values-prom-stack.yaml, alertmanager-managed-config.yaml
+- Verwijzingen `doc/` → `docs/` in o.a. CHANGELOG, docs/AGENTS.md, .cursor/rules, docs/README.md, docs/ROADMAP.md, docs/alerting.md, docs/rules/HPAMaxedOut.md, stack/values.yaml, alertmanager-managed-config.yaml
 
 ### Opmerking
 - Wijzigingen door Cursor-agents: zie `docs/AGENTS.md` voor afspraken. Elke agent werkt bij voorkeur in eigen deel en werkt **CHANGELOG.md** bij bij commits.
