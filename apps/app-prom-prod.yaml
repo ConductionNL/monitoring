@@ -51,6 +51,9 @@ spec:
     path: prometheus/rules/deploy
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
+    path: prometheus/rules/nextcloud
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
     path: grafana/dashboards
   syncPolicy:
     automated:

@@ -5,6 +5,14 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 ## [Unreleased]
 
 ### Toegevoegd
+- `grafana/.env.example` — `NEXTCLOUD_NAMESPACES` (komma-gescheiden) voor Nextcloud-dashboard; script leest dit en past dashboard in cluster aan
+- `scripts/grafana-nextcloud-dashboard-apply.sh` — past Nextcloud-dashboard toe met namespaces uit `grafana/.env`
+- `prometheus/rules/nextcloud/rules-phpfpm-pm.yaml` — PHP-FPM/PM-alerts (PhpFpmDown, PhpFpmMaxChildrenReached, PhpFpmListenQueueHigh, PhpFpmNoIdleProcesses)
+- `docs/rules/PhpFpmDown.md`, `PhpFpmMaxChildrenReached.md`, `PhpFpmListenQueueHigh.md`, `PhpFpmNoIdleProcesses.md` — runbooks voor PM-alerts
+- `docs/phpfpm-metrics.md` — uitleg exporter + ServiceMonitor voor PHP-FPM metrics
+- `grafana/dashboards/cluster-overview.yaml` — cluster-overview (nodes, namespaces, pods, node CPU/memory, pods per namespace)
+- `grafana/dashboards/nextcloud-environments.yaml` — Nextcloud-omgevingen (filter op namespace-regex, pods/deployments, CPU/memory per pod)
+- `grafana/dashboards/node-disk-io.yaml` — dashboard NodeDiskIOSaturation (disk IO queue, utilization, read/write), met link naar runbook
 - `docs/rules/DeploymentUnhealthy.md` — runbook voor DeploymentUnhealthy-alert
 - `docs/rules/KubeHpaMaxedOut.md` — documentatie KubeHpaMaxedOut (stack vs eigen HPAMaxedOut)
 - `docs/rules/NodeSystemSaturation.md` — runbook NodeSystemSaturation (node load, extreme waarden)
@@ -15,6 +23,9 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 - `CHANGELOG.md` — dit bestand
 
 ### Gewijzigd
+- `apps/app-prom-prod.yaml` — source `prometheus/rules/nextcloud` toegevoegd voor PHP-FPM rules
+- `grafana/README.md` — Nextcloud-namespaces via .env + script; dashboards-sectie
+- `docs/README.md` — PHP-FPM/PM rules en link naar phpfpm-metrics.md
 - `README.md` — inhoud/documentatie
 - `docs/README.md` — overzicht rules, testen en verwijzing naar CHANGELOG/AGENTS
 - `apps/app-prom-prod.yaml` — Argo CD app configuratie

@@ -1,0 +1,44 @@
+# PHP-FPM / PM (process manager) alerts voor Nextcloud en andere PHP-FPM workloads.
+# Vereist: PHP-FPM statuspagina (pm.status_path) + exporter (bijv. Lusitaniae phpfpm_exporter)
+# die door Prometheus wordt gescrapet. Metrics: php_fpm_* (FQN).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mon-phpfpm-pm
+  namespace: monitoring
+  labels: { release: mon }
+spec:
+  groups:
+  - name: phpfpm.pm.rules
+    rules:
+    - alert: PhpFpmDown
+      expr: php_fpm_up == 0
+      for: 2m
+      labels: { severity: critical, team: platform }
+      annotations:
+        summary: "PHP-FPM / PM niet bereikbaar ({{ $labels.socket_path }})"
+        description: "De PHP-FPM statuspagina is niet bereikbaar. PM-servers of child processen werken mogelijk niet. Controleer pod, exporter en pm.status_path."
+
+    - alert: PhpFpmMaxChildrenReached
+      expr: php_fpm_max_children_reached > 0
+      for: 1m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "PHP-FPM max children bereikt ({{ $labels.socket_path }})"
+        description: "Het maximum aantal child processen is bereikt; requests kunnen in de wachtrij staan. Overweeg pm.max_children te verhogen of load te spreiden."
+
+    - alert: PhpFpmListenQueueHigh
+      expr: php_fpm_listen_queue > 10
+      for: 5m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "PHP-FPM listen queue hoog ({{ $labels.socket_path }})"
+        description: "Er staan te veel requests in de wachtrij. PM is verzadigd; controleer actieve/ideale processen en pm.max_children."
+
+    - alert: PhpFpmNoIdleProcesses
+      expr: php_fpm_idle_processes == 0 and php_fpm_active_processes > 0
+      for: 5m
+      labels: { severity: warning, team: platform }
+      annotations:
+        summary: "PHP-FPM geen vrije processen ({{ $labels.socket_path }})"
+        description: "Geen idle child processen; alle workers zijn bezet. Verzadiging van de PM; nieuwe requests wachten."

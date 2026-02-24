@@ -3,11 +3,12 @@
 Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze test.
 
 ## Inhoud
+- **PHP-FPM/PM**: Zie `phpfpm-metrics.md` voor het aanzetten van metrics (exporter + ServiceMonitor). Alerts: `rules/PhpFpmDown.md`, enz.
 - **Deployments**: `rules/DeploymentUnhealthy.md`
 - **CoreDNS**: `rules/CoreDNSNotReady.md`
 - **CoreDNS (extended)**: `rules/CoreDNSExtended.md`
 - **Pods**: `rules/CreateContainerConfigError.md`, `rules/PodPendingLong.md`
-- **Overige**: HPA (`HPAMaxedOut.md`, `KubeHpaMaxedOut.md` — stack-default, o.a. coredns), Ingress (`IngressHigh5xx.md`), certs (`CertificateExpiringSoon.md`), storage (`PVCUsageHigh.md`), images (`ImagePullError.md`), **node** (`NodeDiskIOSaturation.md`, `NodeSystemSaturation.md`)
+- **Overige**: HPA (`HPAMaxedOut.md`, `KubeHpaMaxedOut.md` — stack-default, o.a. coredns), Ingress (`IngressHigh5xx.md`), certs (`CertificateExpiringSoon.md`), storage (`PVCUsageHigh.md`), images (`ImagePullError.md`), **node** (`NodeDiskIOSaturation.md`, `NodeSystemSaturation.md`), **PHP-FPM/PM** (`PhpFpmDown.md`, `PhpFpmMaxChildrenReached.md`, `PhpFpmListenQueueHigh.md`, `PhpFpmNoIdleProcesses.md`)
 - **Changelog & agents**: repo-changelog in `CHANGELOG.md`; afspraken voor meerdere Cursor-agents in `docs/AGENTS.md`.
 
 ## Waar regels vandaan komen

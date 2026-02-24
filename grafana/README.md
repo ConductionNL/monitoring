@@ -4,14 +4,14 @@ Alle Grafana-configuratie die we willen borgen staat in deze repo. **Secrets** (
 
 ## Keycloak OAuth (Generic OAuth)
 
-Grafana is gekoppeld aan Keycloak voor login. Je **maakt geen nieuwe secrets in Keycloak** – je gebruikt de **client secret die Keycloak al toont** bij je client (realm Grafana, client `grafana`). Die waarde zet je lokaal in `grafana/.env`; het script maakt daar een Kubernetes Secret van zodat Grafana die kan gebruiken.
+Grafana is gekoppeld aan Keycloak voor login. Je **maakt geen nieuwe secrets in Keycloak** – je gebruikt de **client secret die Keycloak al toont** bij je client (realm **commonground**, client `grafana`). Die waarde zet je lokaal in `grafana/.env`; het script maakt daar een Kubernetes Secret van zodat Grafana die kan gebruiken.
 
 - **In Git**: `stack/values.yaml` → `grafana.grafana.ini` (auth.generic_oauth met urls, scopes, enz.) en `extraSecretMounts` (Secret als bestanden onder `/etc/grafana/secrets/oauth`). Client_id en client_secret worden uit die bestanden gelezen via `$__file{...}`.
 - **Niet in Git**: de client secret uit Keycloak → in `grafana/.env` → script → K8s Secret `grafana-keycloak-oauth` (keys: `GF_AUTH_GENERIC_OAUTH_CLIENT_ID`, `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET`).
 
 ### Secret uit Keycloak naar het cluster
 
-1. In Keycloak heb je al: realm Grafana, client `grafana`, client secret (staat in het tabblad Credentials). **Kopieer die secret** – die gebruik je hier.
+1. In Keycloak heb je al: realm **commonground**, client `grafana`, client secret (tab Credentials). **Kopieer die secret** – die gebruik je hier.
 2. Lokaal:
    ```bash
    cp grafana/.env.example grafana/.env
@@ -41,10 +41,10 @@ Grafana leest daarna `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` en `GF_AUTH_GENERIC_OAUTH
    ```
    Wacht tot de nieuwe pod Running is, open dan https://grafana.commonground.nu in een **incognitovenster** of hard refresh (Ctrl+Shift+R). Je zou nu **"Sign in with Keycloak"** moeten zien.
 
-3. **Redirect URI in Keycloak**  
-   Bij client `grafana` (realm Grafana) onder **Valid redirect URIs** minimaal:
-   - `https://grafana.commonground.nu/login/generic_oauth`  
-   Onder **Web origins** (indien aanwezig): `https://grafana.commonground.nu` of `+`.
+- **Redirect URI in Keycloak**  
+  Bij de client (realm **commonground**) onder **Valid redirect URIs** minimaal:
+  - `https://grafana.commonground.nu/login/generic_oauth`  
+  Onder **Web origins** (indien aanwezig): `https://grafana.commonground.nu` of `+`.
 
 4. **Logs bij login-fout**
    ```bash
@@ -70,7 +70,16 @@ Geen handmatige configuratie in de Grafana UI nodig; na sync is de datasource be
 - **`dashboards/`**: ConfigMaps met label `grafana_dashboard: "1"`.
   - De kube-prometheus-stack Grafana sidecar laadt deze automatisch.
   - Elke ConfigMap: `data.<bestandsnaam>.json` = dashboard-JSON.
-  - Voorbeelden: `node-overview.yaml` (node load / load per core, o.a. voor NodeSystemSaturation).
+  - **Alert-history dashboards** (per veelvoorkomende alert):
+    - `node-overview.yaml` – node load / load per core (NodeSystemSaturation).
+    - `node-disk-io.yaml` – **NodeDiskIOSaturation**: disk IO queue (aqu-sq), utilization, read/write throughput. Link naar runbook in dashboard.
+  - **Overzichten**:
+    - `cluster-overview.yaml` – cluster: nodes, namespaces, pods, node CPU/memory, pods per namespace.
+    - `nextcloud-environments.yaml` – Nextcloud-omgevingen: **welke omgevingen we monitoren** kun je op twee manieren instellen:
+      - **Via .env (aanbevolen)**: Zet in `grafana/.env` (gitignored) `NEXTCLOUD_NAMESPACES=nextcloud, nextcloud-data, nextcloud-llm` (komma-gescheiden). Draai daarna `./scripts/grafana-nextcloud-dashboard-apply.sh`; die past het dashboard in het cluster aan met die lijst (zonder de YAML in Git te wijzigen).
+      - **Via Git**: Bewerk in `grafana/dashboards/nextcloud-environments.yaml` de variabele `nextcloud_ns` (query, options, allValue), commit + sync.
+
+**Kosten/resources:** De dashboards gebruiken alleen metrics die de stack al scrapet (kube-state-metrics, node-exporter, kubelet). Geen extra scrape-targets of significante resourcekosten; alleen extra Prometheus-queries wanneer iemand een dashboard open heeft.
 
 Nieuwe dashboards toevoegen:
 
