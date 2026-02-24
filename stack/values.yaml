@@ -106,7 +106,7 @@ grafana:
   extraSecretMounts:
     - name: oauth-secret
       secretName: grafana-keycloak-oauth
-      defaultMode: 0400
+      defaultMode: "0444"
       mountPath: /etc/grafana/secrets/oauth
       readOnly: true
 
@@ -117,7 +117,7 @@ grafana:
       enabled: true
       name: Keycloak
       allow_sign_up: true
-      client_id: $__file{/etc/grafana/secrets/oauth/GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
+      client_id: grafana
       client_secret: $__file{/etc/grafana/secrets/oauth/GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
       scopes: openid email profile
       auth_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/auth

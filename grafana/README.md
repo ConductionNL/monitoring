@@ -51,6 +51,12 @@ Grafana leest daarna `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` en `GF_AUTH_GENERIC_OAUTH
    kubectl -n monitoring logs -l app.kubernetes.io/name=grafana --tail=100 | grep -i oauth
    ```
 
+5. **Debugscript** (zichtbaar wat de pod ziet):
+   ```bash
+   ./scripts/grafana-debug-oauth.sh
+   ```
+   Controleer: bestaat `/etc/grafana/secrets/oauth`? Staat in `grafana.ini` de sectie `[auth.generic_oauth]` met `enabled = true`? Zo niet, dan geeft de Helm chart de values niet door aan de Grafana-subchart.
+
 ## Datasource
 
 - **Prometheus** wordt expliciet in Git gezet via Helm values:
