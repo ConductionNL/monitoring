@@ -33,7 +33,7 @@ kubectl -n monitoring delete secret alertmanager-slack-webhook
 - Commit & push; Argo sync → Alertmanager herlaadt.
 
 ## Test
-1. Forceer een testalert (zie doc/rules/* voor voorbeelden)
+1. Forceer een testalert (zie docs/rules/* voor voorbeelden)
 2. Controleer Alertmanager UI (active alerts)
 3. Bevestig ontvangst in Slack-kanaal
 

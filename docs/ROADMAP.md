@@ -14,4 +14,4 @@
   - Image pinning/digest, PodSecurity; failure backoff and dedupe.
   - Slack/Sentry on failed autofix jobs.
 - Runbook coverage:
-  - Expand runbooks in `doc/rules/` (CPUThrottlingHigh, NodeDiskIOSaturation, …).
+  - Expand runbooks in `docs/rules/` (CPUThrottlingHigh, NodeDiskIOSaturation, …).

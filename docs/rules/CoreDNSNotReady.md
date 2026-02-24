@@ -1,6 +1,6 @@
 # CoreDNSNotReady
 
-- Bron: `rules/coredns/rules-coredns.yaml`
+- Bron: `prometheus/rules/coredns/rules-coredns.yaml`
 - Alert: `CoreDNSNotReady`
 - Severity: `warning`
 

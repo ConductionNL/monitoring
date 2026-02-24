@@ -1,4 +1,6 @@
 *:Zone.Identifier
 age.agekey
 repo-ssh-*.yaml
+.env
+grafana/.env
 

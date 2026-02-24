@@ -1,0 +1,20 @@
+---
+description: Wijzigingen vastleggen in CHANGELOG.md; coördinatie bij meerdere agents
+alwaysApply: true
+---
+
+# Changelog en multi-agent afspraken
+
+## Changelog
+- **Elke inhoudelijke wijziging** aan de repo (nieuwe bestanden, gewijzigde config, rules, docs) moet in **CHANGELOG.md** onder `[Unreleased]` worden vastgelegd.
+- Gebruik de secties: `Toegevoegd`, `Gewijzigd`, `Verwijderd`.
+- Formaat: `- bestand of onderdeel — korte beschrijving`.
+
+## Multi-agent (meerdere Cursor-sessies)
+- **Eén bron van waarheid**: CHANGELOG.md. Beide (of alle) agents werken deze bij; geen aparte "agent-log" bestanden.
+- **Niet overlappen**: Voorkom gelijktijdig bewerken van dezelfde bestanden. Bij onzekerheid: wijzigingen beperken tot duidelijke domeinen (bijv. agent A: alleen `docs/rules/*`, agent B: alleen `grafana/` of `overlays/`).
+- **Documentatie-agent**: Als één sessie expliciet "documentatie/changelog bijhouden" doet: die sessie is verantwoordelijk voor het bijwerken van CHANGELOG.md op basis van git status of door de andere agent genoemde wijzigingen; de andere agent focust op feature/config-wijzigingen en vermeldt in de chat wat er gewijzigd is zodat het in de changelog kan.
+
+## Korte checklist vóór commit
+1. Zijn alle gewijzigde/toegevoegde/verwijderde onderdelen in CHANGELOG.md onder [Unreleased] gezet?
+2. Zie `docs/AGENTS.md` voor verdere afspraken.

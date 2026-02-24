@@ -1,6 +1,6 @@
 # CertificateExpiringSoon
 
-- Bron: `rules/certmanager/rules-cert-expiry.yaml`
+- Bron: `prometheus/rules/certmanager/rules-cert-expiry.yaml`
 - Alert: `CertificateExpiringSoon`
 - Severity: `warning`
 

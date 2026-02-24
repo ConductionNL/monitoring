@@ -1,6 +1,6 @@
 # HPAMaxedOut
 
-- Bron: `rules/hpa/rules-hpa-maxed.yaml`
+- Bron: `prometheus/rules/hpa/rules-hpa-maxed.yaml`
 - Alert: `HPAMaxedOut`
 - Severity: `warning`
 
@@ -13,6 +13,7 @@ HPA zit op maximaal aantal replicas (>10m), risico op underprovisioning.
 ## Runbook
 1. Check workload load/latency en resource requests.
 2. Verhoog `maxReplicas` of optimaliseer toepassing.
+3. Voor **CoreDNS** (kube-system/coredns): zie ook `docs/rules/KubeHpaMaxedOut.md` — zelfde probleem, uitgebreider runbook (o.a. DNS-load en maxReplicas).
 
 ## Verwachte routing
 - Slack default receiver.

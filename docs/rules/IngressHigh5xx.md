@@ -1,6 +1,6 @@
 # IngressHigh5xx
 
-- Bron: `rules/ingress/rules-nginx-5xx.yaml`
+- Bron: `prometheus/rules/ingress/rules-nginx-5xx.yaml`
 - Alert: `IngressHigh5xx`
 - Severity: `warning`
 

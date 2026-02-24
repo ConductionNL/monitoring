@@ -1,6 +1,6 @@
 # CreateContainerConfigError
 
-- Bron: `rules/pods/rules-createconfig.yaml`
+- Bron: `prometheus/rules/pods/rules-createconfig.yaml`
 - Alert: `CreateContainerConfigError`
 - Severity: `warning`
 - Labels: `team=platform`

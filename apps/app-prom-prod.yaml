@@ -22,10 +22,10 @@ spec:
     ref: values
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/coredns
+    path: prometheus/rules/coredns
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/pods
+    path: prometheus/rules/pods
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
     path: alerting
@@ -33,19 +33,25 @@ spec:
       recurse: true
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/images
+    path: prometheus/rules/images
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/storage
+    path: prometheus/rules/storage
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/ingress
+    path: prometheus/rules/ingress
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/certmanager
+    path: prometheus/rules/certmanager
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
-    path: rules/hpa
+    path: prometheus/rules/hpa
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: prometheus/rules/deploy
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: grafana/dashboards
   syncPolicy:
     automated:
       prune: true

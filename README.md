@@ -1,54 +1,70 @@
 # Monitoring GitOps (private repo) — Starter
 
-**Stack**: Argo CD (multiple sources) + kube-prometheus-stack (Prometheus Operator) + Alertmanager + (optioneel) Grafana.
+**Stack**: Argo CD (multiple sources) + kube-prometheus-stack (Prometheus Operator) + Alertmanager + Grafana.
 **Secrets**: SOPS (age). Repo is **private**; geen plaintext secrets.
 
-## Inhoud
-- `overlays/prod/values-prom-stack.yaml`: Helm values voor `kube-prometheus-stack`.
-- `rules/`: Losse `PrometheusRule` CRD's (met label `release: mon`).
-- `alerting/`: Alertmanager ConfigMap en SOPS-secret voor Slack.
-- `rules/`: Losse `PrometheusRule` CRD's. Labels bevatten `release: mon` voor selector-match.
-- `alerting/alertmanager.yaml`: Alertmanager routes/receivers (zonder secret).
-- `alerting/secret-alertmanager.sops.yaml`: **SOPS-versleuteld** geheim (Slack webhook). Wordt lokaal gegenereerd via het bootstrap-script.
-- `apps/`: Argo CD `Application` manifests per omgeving.
-- `.sops.yaml`: SOPS policy (welke paden versleuteld moeten worden).
+## Repo-structuur (component-gebaseerd)
+
+Alles is per **component** georganiseerd; uitbreiding met extra componenten (bijv. Loki, Tempo) volgt hetzelfde patroon.
+
+```
+monitoring/
+├── apps/                    # Argo CD Applications (welke paden gesynct worden)
+├── prometheus/              # Alles Prometheus-gerelateerd
+│   ├── README.md
+│   └── rules/               # PrometheusRule CRD's, per domein
+│       ├── coredns/
+│       ├── deploy/
+│       ├── hpa/
+│       ├── images/
+│       ├── ingress/
+│       ├── certmanager/
+│       ├── pods/
+│       └── storage/
+├── grafana/                 # Alles Grafana-gerelateerd
+│   ├── README.md
+│   └── dashboards/          # ConfigMaps (label grafana_dashboard)
+├── alerting/                # Alertmanager + event-routing
+│   ├── alertmanager-managed-config.yaml
+│   ├── secret-alertmanager.sops.yaml
+│   └── argo-events/         # Webhook/autofix
+├── overlays/prod/           # Helm values (stack-brede config)
+│   └── values-prom-stack.yaml
+├── docs/                    # Runbooks, uitleg per alert
+│   ├── README.md
+│   ├── rules/               # Eén .md per alert (Slack linkt hiernaar)
+│   ├── alerting.md
+│   └── ROADMAP.md
+├── tests/                   # Connectivity / smoke tests
+└── scripts/
+```
+
+**Afspraak**: Elke alert heeft documentatie in `docs/rules/<AlertName>.md`. Prometheus-config (rules, scrape) in `prometheus/` of via values; Grafana (dashboards, datasource) in `grafana/` of values; Alertmanager in `alerting/`.
+
+## Inhoud (kort)
+
+- **GitOps**: Argo CD haalt de Helm chart `kube-prometheus-stack` en past jullie values toe. Geen lokaal `helm install`. Zie `apps/app-prom-prod.yaml` voor alle sources (`prometheus/rules/*`, `grafana/dashboards`, `alerting`, values).
+- **Configuratie in Git**: Datasource-URL in `overlays/prod/values-prom-stack.yaml`; dashboards in `grafana/dashboards/`; Prometheus-rules in `prometheus/rules/`; Alertmanager in `alerting/`. Zie `prometheus/README.md` en `grafana/README.md`.
+- **Secrets**: SOPS (age). Slack webhook in `alerting/secret-alertmanager.sops.yaml`; lokaal genereren via `./bootstrap_sops.sh`.
 
 ## Bootstrap (lokaal, vóór eerste commit)
+
 1. Installeer SOPS en age.
 2. Genereer age key en versleutel Slack webhook:
    ```bash
    ./bootstrap_sops.sh
    ```
-   Dit maakt:
-   - `alerting/secret-alertmanager.sops.yaml` (encrypted)
-   - `age.agekey` (privé sleutel; **niet committen**).
-
-3. Argo CD repo-server configureren: plaats de age private key in het cluster (bv. als Secret + volume mount) zodat Argo sops kan decrypten tijdens sync.
-   - Documentatie Argo + SOPS: repo-server plugin of sidecar; zorg dat `sops` binary aanwezig is.
-
-4. **Syncen**
-   ```bash
-    kubectl -n argocd apply -f apps/app-prom-prod.yaml
-   ```
-
-5. **Verifiëren**
-   ```bash
-   # Prometheus
-   kubectl -n monitoring port-forward svc/mon-kube-prometheus-stack-prometheus 9090:9090
-   open http://127.0.0.1:9090    # Status -> Rules / Alerts
-
-   # Alertmanager
-   kubectl -n monitoring port-forward svc/mon-kube-prometheus-stack-alertmanager 9093:9093
-   open http://127.0.0.1:9093
-   ```
-
-6. **Notes**: Single-cluster setup; Argo CD multiple sources (Helm + directories voor `rules/` en `alerting/`).
+3. Argo CD repo-server: age private key in cluster (SOPS decrypt tijdens sync).
+4. **Syncen**: `kubectl -n argocd apply -f apps/app-prom-prod.yaml`
+5. **Verifiëren**: port-forward naar Prometheus (9090), Alertmanager (9093), Grafana (3000) — zie `docs/README.md` voor exacte commando’s.
 
 ## Belangrijke keuzes
-- Repo is private; alle secrets via SOPS. Geen GitHub Secrets gebruiken voor Argo.
-- Eén bron van waarheid: losse `PrometheusRule` bestanden in `rules/`.
-- Slack notificaties via Alertmanager; Grafana voor visualisatie.
+
+- Repo is private; secrets via SOPS.
+- Eén bron van waarheid: PrometheusRule-bestanden in `prometheus/rules/`; dashboards in `grafana/dashboards/`.
+- Component-mappen: `prometheus/`, `grafana/`, `alerting/` (later uitbreidbaar).
 
 ## Cleanup/Notes
-- Pas `namespace` of `channel` aan naar jullie werkelijkheid.
-- Voeg extra rules/dashboards als losse bestanden toe (reviewbaar).
+
+- Pas namespace of Slack-kanaal aan naar jullie werkelijkheid.
+- Voeg nieuwe rules toe onder `prometheus/rules/<domein>/`, nieuwe dashboards onder `grafana/dashboards/`.

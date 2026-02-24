@@ -94,18 +94,50 @@ alertmanager:
   templateFiles:
     slack.tmpl: |
       {{ define "slack.mon.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
-      {{ define "slack.mon.titlelink" }}https://github.com/ConductionNL/monitoring/blob/main/doc/rules/{{ .CommonLabels.alertname }}.md{{ end }}
+      {{ define "slack.mon.titlelink" }}https://github.com/ConductionNL/monitoring/blob/main/docs/rules/{{ .CommonLabels.alertname }}.md{{ end }}
       {{ define "slack.mon.text" }}{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}{{ end }}
       {{ define "slack.mon.footer" }}severity={{ .CommonLabels.severity | default "-" }} • receiver={{ .Receiver }}{{ end }}
 grafana:
   enabled: true
 
+  # Keycloak Generic OAuth – alleen actief als Secret grafana-keycloak-oauth bestaat.
+  # Zonder dat Secret: laat deze twee regels uit of comment ze uit tot je ./scripts/grafana-oauth-secret.sh hebt gedraaid.
+  # envFromSecret: grafana-keycloak-oauth
+  #
+  # grafana.ini (Keycloak): uncomment de onderstaande block + envFromSecret hierboven als Keycloak klaar is.
+  # grafana.ini:
+  #   server:
+  #     root_url: https://grafana.commonground.nu/
+  #   auth.generic_oauth:
+  #     enabled: true
+  #     name: Keycloak
+  #     allow_sign_up: true
+  #     scopes: openid email profile
+  #     auth_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/auth
+  #     token_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/token
+  #     api_url: https://iam.commonground.nu/realms/Grafana/protocol/openid-connect/userinfo
+  #     use_pkce: true
+  #     email_attribute_path: email
+  #     login_attribute_path: preferred_username
+  #     name_attribute_path: name
+  #
+  # client_id en client_secret uit Secret (GF_AUTH_GENERIC_OAUTH_*). Zie grafana/.env.example en grafana/README.md.
+
+  # Zonder Keycloak: basis-root_url (optioneel)
+  grafana.ini:
+    server:
+      root_url: https://grafana.commonground.nu/
+
+  # Datasource expliciet in Git (GitOps): Prometheus-URL vastgelegd in values
   sidecar:
     datasources:
-      enabled: false
+      enabled: true
+      defaultDatasourceEnabled: true
+      url: http://mon-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
     dashboards:
       enabled: true
       label: grafana_dashboard
+      labelValue: "1"
 
   persistence:
     enabled: false

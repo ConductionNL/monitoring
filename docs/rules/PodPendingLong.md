@@ -1,6 +1,6 @@
 # PodPendingLong
 
-- Bron: `rules/pods/rules-podpending.yaml`
+- Bron: `prometheus/rules/pods/rules-podpending.yaml`
 - Alert: `PodPendingLong`
 - Severity: `warning`
 

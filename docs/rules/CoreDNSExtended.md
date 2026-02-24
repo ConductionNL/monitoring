@@ -1,6 +1,6 @@
 # CoreDNS Extended Alerts
 
-- Bron: `rules/coredns/rules-coredns-extended.yaml`
+- Bron: `prometheus/rules/coredns/rules-coredns-extended.yaml`
 - Alerts: `CoreDNSDeploymentUnavailable`, `CoreDNSPodRestarts`, `CoreDNSServfailRateHigh`, `CoreDNSRefusedRateHigh`, `CoreDNSConfigRecreatedRecently`, `KubeSystemDeploymentRolledOut`
 - Severity: mix van critical/warning/info
 

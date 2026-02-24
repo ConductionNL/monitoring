@@ -1,6 +1,6 @@
 # ImagePullError
 
-- Bron: `rules/images/rules-imagepull.yaml`
+- Bron: `prometheus/rules/images/rules-imagepull.yaml`
 - Alert: `ImagePullError`
 - Severity: `warning`
 

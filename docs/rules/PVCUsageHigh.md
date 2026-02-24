@@ -1,6 +1,6 @@
 # PVCUsageHigh
 
-- Bron: `rules/storage/rules-pvc-usage.yaml`
+- Bron: `prometheus/rules/storage/rules-pvc-usage.yaml`
 - Alert: `PVCUsageHigh`
 - Severity: `warning`
 

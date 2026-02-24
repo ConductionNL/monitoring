@@ -3,12 +3,15 @@
 Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze test.
 
 ## Inhoud
-- CoreDNS: zie `rules/CoreDNSNotReady.md`
-- CoreDNS (extended): zie `rules/CoreDNSExtended.md`
-- Pods: zie `rules/CreateContainerConfigError.md`
+- **Deployments**: `rules/DeploymentUnhealthy.md`
+- **CoreDNS**: `rules/CoreDNSNotReady.md`
+- **CoreDNS (extended)**: `rules/CoreDNSExtended.md`
+- **Pods**: `rules/CreateContainerConfigError.md`, `rules/PodPendingLong.md`
+- **Overige**: HPA (`HPAMaxedOut.md`, `KubeHpaMaxedOut.md` — stack-default, o.a. coredns), Ingress (`IngressHigh5xx.md`), certs (`CertificateExpiringSoon.md`), storage (`PVCUsageHigh.md`), images (`ImagePullError.md`), **node** (`NodeDiskIOSaturation.md`, `NodeSystemSaturation.md`)
+- **Changelog & agents**: repo-changelog in `CHANGELOG.md`; afspraken voor meerdere Cursor-agents in `docs/AGENTS.md`.
 
 ## Waar regels vandaan komen
-- Regels staan in de repo onder `rules/` als losstaande `PrometheusRule` CRD's.
+- Regels staan in de repo onder `prometheus/rules/` als losstaande `PrometheusRule` CRD's.
 - Ze worden opgepakt door Prometheus via `ruleSelector.matchLabels.release: mon`.
 
 ## Routing van alerts
@@ -49,5 +52,5 @@ kubectl -n monitoring port-forward svc/mon-grafana 3000:80
   kubectl -n monitoring wait --for=condition=complete job -l app=connectivity-smoke --timeout=120s
   ```
 
-Opmerking: een automatische CI-run na push is voorlopig uitgeschakeld i.v.m. roterende kubeconfig. Zie `doc/ROADMAP.md` voor het plan (ServiceAccount + stabiel kubeconfig-secret voor CI).
+Opmerking: een automatische CI-run na push is voorlopig uitgeschakeld i.v.m. roterende kubeconfig. Zie `docs/ROADMAP.md` voor het plan (ServiceAccount + stabiel kubeconfig-secret voor CI).
 
