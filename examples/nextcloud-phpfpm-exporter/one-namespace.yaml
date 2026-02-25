@@ -1,0 +1,48 @@
+# PHP-FPM exporter: 1× in één namespace (vng-backend-test). Vrijdag zelfde container/label bij alle deploys = zelfde ServiceMonitor pikt ze op.
+# Gebruik: kubectl apply -f one-namespace.yaml -n vng-backend-test
+# Pas zo nodig het PHP-FPM-adres aan (args): moet TCP zijn, bijv. nextcloud.<namespace>.svc:9000, met pm.status_path in de pool.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-phpfpm-exporter
+  namespace: vng-backend-test
+  labels:
+    app: nextcloud-phpfpm-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud-phpfpm-exporter
+  template:
+    metadata:
+      labels:
+        app: nextcloud-phpfpm-exporter
+    spec:
+      containers:
+        - name: phpfpm-exporter
+          image: quay.io/lusitaniae/phpfpm-exporter:latest
+          args:
+            - --phpfpm.socket-paths=tcp://nextcloud.vng-backend-test.svc.cluster.local:9000
+            - --phpfpm.status-path=/status
+          ports:
+            - name: metrics
+              containerPort: 9253
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits:   { cpu: 100m, memory: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-phpfpm-exporter
+  namespace: vng-backend-test
+  labels:
+    app: nextcloud-phpfpm-exporter
+spec:
+  selector:
+    app: nextcloud-phpfpm-exporter
+  ports:
+    - name: metrics
+      port: 9253
+      targetPort: 9253

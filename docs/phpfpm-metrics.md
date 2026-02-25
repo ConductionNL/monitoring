@@ -20,6 +20,25 @@ Als jullie andere labels of poort gebruiken: pas alleen die twee in `stack/value
 
 **Daarna:** push + sync stack → Prometheus scrapet de bestaande service → als die al `php_fpm_*` metrics levert, zie je data in het Grafana-dashboard. **Eerst dit bewijzen; daarna pas iets nieuws implementeren.**
 
+### Nog geen data? Debug-checklist
+
+1. **Namespace**  
+   De ServiceMonitor kijkt alleen in **vng-backend-accept** en **epe**. Staat nextcloud-metrics in een andere namespace? Voeg die dan toe onder `namespaceSelector.matchNames` in `stack/values.yaml`, push/sync.
+
+2. **ServiceMonitor bestaat en wordt geselecteerd**
+   ```bash
+   kubectl get servicemonitor -n monitoring | grep -E 'nextcloud|phpfpm'
+   ```
+   Geen resultaat? De chart verwacht **`prometheusOperator.additionalServiceMonitors`** (niet root-level). In `stack/values.yaml` staat het nu onder `prometheusOperator`; na push/sync zou de ServiceMonitor aangemaakt moeten worden.
+
+3. **Target in Prometheus**  
+   Prometheus UI → Status → Targets. Zoek op `nextcloud-phpfpm` of op de namespace. Staat de target erbij en is die **Up**? Zo niet: foutmelding op de target bekijken (connect, timeout, 404, etc.).
+
+4. **Welke metrics levert de service?**  
+   Als de target Up is: in Prometheus of Grafana Explore query `{job="nextcloud-phpfpm"}` of `php_fpm_up`.  
+   - **Geen `php_fpm_*` / geen pm.x:** De bestaande nextcloud-metrics op 9205 is een **andere** exporter (bijv. Nextcloud-app-metrics). De PHP-FPM-panels en -alerts hebben een **echte PHP-FPM exporter** nodig (bijv. Lusitaniae phpfpm_exporter) die `php_fpm_active_processes`, `php_fpm_listen_queue`, enz. levert. Opties: die exporter als extra container/sidecar in jullie nextcloud-metrics deploy toevoegen, of apart draaien (zie `examples/nextcloud-phpfpm-exporter/`).  
+   - Wel php_fpm_*: dan zou het dashboard moeten vullen.
+
 ## Wat er in deze repo staat
 
 - **ServiceMonitor** in `stack/values.yaml`: scrapet Services met label **`app: nextcloud-metrics`** en poort **9253** in **vng-backend-accept** en **epe**. Als jullie bestaande Service andere labels/poort heeft: pas die twee in de ServiceMonitor aan (geen nieuwe workloads).

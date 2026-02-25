@@ -1,29 +1,27 @@
-# Voorbeeld: PHP-FPM exporter (1× test, daarna in platform)
+# PHP-FPM exporter: 1× in één namespace, vrijdag bij alle deploys
 
-Deze map bevat een **eenmalige test-deployment** van de PHP-FPM exporter. Als het werkt, kun je hetzelfde patroon in jullie **nextcloud-metrics** deploy in het platform opnemen.
+## Nu: 1× als pod in één namespace
+
+**Bestand:** `one-namespace.yaml` (Deployment + Service, label `app: nextcloud-phpfpm-exporter`, poort 9253).
+
+1. **PHP-FPM-adres aanpassen** in `one-namespace.yaml` als je andere service/namespace gebruikt:  
+   `--phpfpm.socket-paths=tcp://nextcloud.vng-backend-accept.svc.cluster.local:9000` → vervang `nextcloud` / `vng-backend-accept` indien nodig. PHP-FPM moet op TCP (bijv. 9000) luisteren en **pm.status_path** hebben.
+
+2. **Toepassen in vng-backend-test:**
+   ```bash
+   kubectl apply -f one-namespace.yaml -n vng-backend-test
+   ```
+   (Namespace staat al in het bestand; `-n vng-backend-test` kan ook.)
+
+3. **Stack syncen** (ServiceMonitor voor `app: nextcloud-phpfpm-exporter` staat in `stack/values.yaml`). Daarna scrapet Prometheus deze pod; de PHP-FPM-rij in het dashboard zou data moeten tonen.
+
+## Vrijdag: bij alle deploys
+
+Zelfde **label** `app: nextcloud-phpfpm-exporter` en **poort 9253** bij elke deploy (exporter als container of sidecar). Dezelfde ServiceMonitor pikt ze dan op. Nieuwe namespaces toevoegen onder `prometheusOperator.additionalServiceMonitors` → `nextcloud-phpfpm-exporter` → `namespaceSelector.matchNames` in `stack/values.yaml`.
 
 ## Vereisten
 
-- PHP-FPM in Nextcloud heeft **pm.status_path** aan (bijv. `/status`) en luistert op **TCP** (bijv. poort 9000), of de exporter kan de **Unix-socket** bereiken (bijv. als sidecar in dezelfde pod).
-- De **ServiceMonitor** voor `app: nextcloud-metrics` staat al in `stack/values.yaml` (namespaces `vng-backend-accept`, `epe`). Elke Service in die namespaces met label `app: nextcloud-metrics` en poort **9253** wordt door Prometheus gescrapet.
-
-## 1× test met dit voorbeeld
-
-1. **Pas de PHP-FPM-adres aan** in `deployment.yaml`:
-   - Voor **TCP**: `--phpfpm.socket-paths=tcp://<nextcloud-service>.<namespace>.svc.cluster.local:9000`
-   - Vervang `<nextcloud-service>` door de naam van de Service van je Nextcloud (bijv. `nextcloud` of `nextcloud-app`) en `<namespace>` door `vng-backend-accept` of `epe`.
-
-2. **Deploy in dezelfde namespace als je Nextcloud** (bijv. vng-backend-accept):
-   ```bash
-   kubectl apply -f deployment.yaml -n vng-backend-accept
-   kubectl apply -f service.yaml -n vng-backend-accept
-   ```
-
-3. **Controleer**:
-   - Pod draait: `kubectl -n vng-backend-accept get pods -l app=nextcloud-metrics`
-   - Metrics lokaal: `kubectl -n vng-backend-accept port-forward svc/nextcloud-metrics 9253:9253` en open http://localhost:9253/metrics (zoek `php_fpm_`).
-
-4. **Sync monitoring-stack** (als de ServiceMonitor nog niet actief was): push/Argo sync voor `stack/values.yaml`. Daarna zou Prometheus de target moeten hebben en het Grafana-dashboard "Nextcloud-omgevingen" (PHP-FPM-rij) data tonen.
+- PHP-FPM: **pm.status_path** aan (bijv. `/status`), luisteren op **TCP** (bijv. 9000) zodat de exporter kan verbinden, of exporter als sidecar met Unix-socket.
 
 ## Als jullie al een nextcloud-metrics deploy hebben
 
