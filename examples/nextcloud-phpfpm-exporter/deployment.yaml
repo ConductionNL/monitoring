@@ -1,0 +1,40 @@
+# Voorbeeld: 1× test-pod voor PHP-FPM exporter.
+# Pas de args aan: vervang <nextcloud-service> en <namespace> door jullie Nextcloud-service en namespace.
+# PHP-FPM moet pm.status_path aan hebben en op TCP (bijv. :9000) luisteren.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-metrics
+  namespace: vng-backend-accept  # pas aan naar de namespace waar Nextcloud draait
+  labels:
+    app: nextcloud-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud-metrics
+  template:
+    metadata:
+      labels:
+        app: nextcloud-metrics
+    spec:
+      containers:
+        - name: phpfpm-exporter
+          image: quay.io/lusitaniae/phpfpm-exporter:latest
+          args:
+            # TCP: vervang door jullie Nextcloud-service (moet op 9000 luisteren met pm.status_path)
+            - --phpfpm.socket-paths=tcp://nextcloud.vng-backend-accept.svc.cluster.local:9000
+            - --phpfpm.status-path=/status
+          ports:
+            - name: metrics
+              containerPort: 9253
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+---
+# Als je Nextcloud in een andere namespace draait, gebruik dan onderstaande en pas namespace + service aan.
+# Voor Unix-socket (exporter als sidecar in dezelfde pod als Nextcloud): gebruik --phpfpm.socket-paths=/path/to/php-fpm.sock

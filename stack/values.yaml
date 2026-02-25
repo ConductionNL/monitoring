@@ -191,3 +191,26 @@ additionalServiceMonitors:
       matchLabels:
         app: kubernetes
         role: proxy
+  # PHP-FPM: scrapet bestaande nextcloud-metrics Service (poort 9205).
+  - name: nextcloud-phpfpm
+    namespace: monitoring
+    labels:
+      release: mon
+    endpoints:
+      - port: 9205
+        path: /metrics
+        scheme: http
+        interval: 30s
+        scrapeTimeout: 10s
+        relabelings:
+          - action: replace
+            targetLabel: job
+            replacement: nextcloud-phpfpm
+    namespaceSelector:
+      matchNames:
+        - vng-backend-accept
+        - epe
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: nextcloud
+        app.kubernetes.io/component: metrics

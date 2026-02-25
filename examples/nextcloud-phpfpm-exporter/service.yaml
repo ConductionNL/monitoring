@@ -1,0 +1,17 @@
+# Service voor de PHP-FPM exporter. Label app=nextcloud-metrics zorgt dat de
+# ServiceMonitor in stack/values.yaml deze scrapet (in namespaces vng-backend-accept, epe).
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-metrics
+  namespace: vng-backend-accept  # zelfde namespace als deployment
+  labels:
+    app: nextcloud-metrics
+spec:
+  selector:
+    app: nextcloud-metrics
+  ports:
+    - name: metrics
+      port: 9253
+      targetPort: 9253
+      protocol: TCP
