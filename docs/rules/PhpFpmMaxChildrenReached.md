@@ -15,5 +15,11 @@ Het maximum aantal child processen (pm.max_children) is minstens één keer bere
 2. **pm.max_children**: Verhoog in de PHP-FPM poolconfiguratie indien de workload structureel hoger is, of optimaliseer de app (minder lange requests, caching).
 3. **Spreiding**: Bij meerdere replicas: is de load gelijkmatig? Overweeg meer replicas of resource limits aanpassen.
 
+## PM-instellingen: wat kan beter?
+- **pm.max_children** verhogen tot minimaal het dubbele van het gemiddelde aantal actieve processen bij piek (rekening houdend met beschikbaar geheugen per worker).
+- **pm.start_servers**: in de buurt van `(pm.min_spare_servers + pm.max_spare_servers) / 2` zodat er bij opstart al voldoende workers zijn.
+- **pm.min_spare_servers** en **pm.max_spare_servers** iets verhogen zodat er sneller idle workers beschikbaar zijn bij pieken.
+- Na wijziging: pool herladen (`php-fpm reload` of pod herstart) en daarna de metrics opnieuw bekijken.
+
 ## Verwachte routing
 - Default (bijv. team-platform-slack).

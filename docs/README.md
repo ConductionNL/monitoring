@@ -4,7 +4,7 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 
 ## Inhoud
 - **PHP-FPM/PM**: Zie `phpfpm-metrics.md` voor het aanzetten van metrics (exporter + ServiceMonitor). Alerts: `rules/PhpFpmDown.md`, enz.
-- **Deployments**: `rules/DeploymentUnhealthy.md`
+- **Deployments**: `rules/DeploymentUnhealthy.md`, `rules/KubeDeploymentReplicasMismatch.md` (stack-default)
 - **CoreDNS**: `rules/CoreDNSNotReady.md`
 - **CoreDNS (extended)**: `rules/CoreDNSExtended.md`
 - **Pods**: `rules/CreateContainerConfigError.md`, `rules/PodPendingLong.md`
