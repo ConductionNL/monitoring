@@ -27,6 +27,9 @@ spec:
         - action: replace
           targetLabel: job
           replacement: nextcloud-phpfpm
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+          action: replace
     # Config (pm.max_children etc.): alleen als je de config-exporter sidecar draait op 9254
     - port: 9254
       path: /metrics

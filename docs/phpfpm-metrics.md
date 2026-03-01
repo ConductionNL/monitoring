@@ -40,7 +40,7 @@ In het dashboard **Nextcloud-omgevingen** staan nu een **PHP-FPM scrape status**
    Open http://localhost:9253/metrics en zoek op `php_fpm_`. Zie je `php_fpm_up`, `php_fpm_active_processes`, enz.?  
    - **php_fpm_up 0**: exporter draait maar kan PHP-FPM niet bereiken (verkeerd adres, geen TCP, geen pm.status_path).  
    - Geen php_fpm_*: verkeerde image of path.  
-   - Wel php_fpm_* met waarden: dan zou Prometheus ze moeten hebben; controleer stap 2 en in Grafana Explore query `php_fpm_up` of `{job="nextcloud-phpfpm"}`.
+   - Wel php_fpm_* met waarden: dan zou Prometheus ze moeten hebben; controleer stap 2 en in Grafana Explore query `php_fpm_up` of `{job="nextcloud-phpfpm"}`. Het dashboard filtert op `job="nextcloud-phpfpm"` (geen namespace-filter), zodat data zichtbaar is zodra de target gescrapet wordt.
 
 4. **Namespace in ServiceMonitor**  
    De ServiceMonitor moet de namespace van de pod bevatten (`vng-backend-test` staat in `stack/values.yaml` bij de entry `nextcloud-phpfpm-exporter` → `namespaceSelector.matchNames`). Na wijziging: push + sync.
