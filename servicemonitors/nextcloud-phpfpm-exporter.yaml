@@ -40,3 +40,6 @@ spec:
         - action: replace
           targetLabel: job
           replacement: nextcloud-phpfpm-config
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+          action: replace

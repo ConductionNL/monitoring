@@ -1,19 +1,22 @@
 # PHP-FPM exporter: 1× in één namespace, vrijdag bij alle deploys
 
-## Nu: 1× als pod in één namespace
+## Nu: 1× als pod in één namespace (incl. 4 pm.xxx in dashboard)
 
-**Bestand:** `one-namespace.yaml` (Deployment + Service, label `app: nextcloud-phpfpm-exporter`, poort 9253).
+**Bestanden:** `configmaps.yaml` (pool-config sample + script) en `one-namespace.yaml` (Deployment met runtime-exporter + config-exporter, Service 9253 + 9254).
 
 1. **PHP-FPM-adres aanpassen** in `one-namespace.yaml` als je andere service/namespace gebruikt:  
-   `--phpfpm.socket-paths=tcp://nextcloud.vng-backend-accept.svc.cluster.local:9000` → vervang `nextcloud` / `vng-backend-accept` indien nodig. PHP-FPM moet op TCP (bijv. 9000) luisteren en **pm.status_path** hebben.
+   `--phpfpm.socket-paths=tcp://nextcloud.vng-backend-test.svc.cluster.local:9000` → vervang indien nodig. PHP-FPM moet op TCP (bijv. 9000) luisteren en **pm.status_path** hebben.
 
-2. **Toepassen in vng-backend-test:**
+2. **Stappen uitvoeren (vng-backend-test):**
    ```bash
+   # Eerst ConfigMaps (pool-config sample + config-exporter script)
+   kubectl apply -f configmaps.yaml -n vng-backend-test
+
+   # Daarna Deployment + Service (runtime-exporter op 9253, config-exporter op 9254)
    kubectl apply -f one-namespace.yaml -n vng-backend-test
    ```
-   (Namespace staat al in het bestand; `-n vng-backend-test` kan ook.)
 
-3. **Stack syncen** (ServiceMonitor voor `app: nextcloud-phpfpm-exporter` staat in `stack/values.yaml`). Daarna scrapet Prometheus deze pod; de PHP-FPM-rij in het dashboard zou data moeten tonen.
+3. **Controleren:** Pod heeft twee containers; Service heeft poorten 9253 en 9254. Na sync van de monitoring-stack (ServiceMonitor in `servicemonitors/`) scrapet Prometheus beide. De 4 pm.xxx-panels in het dashboard vullen met de waarden uit de sample-config (50, 5, 5, 35) tot je een echte pool-config mount.
 
 ## Vrijdag: bij alle deploys
 

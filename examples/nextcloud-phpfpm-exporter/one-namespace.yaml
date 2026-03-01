@@ -1,6 +1,7 @@
-# PHP-FPM exporter: 1× in één namespace (vng-backend-test). Vrijdag zelfde container/label bij alle deploys = zelfde ServiceMonitor pikt ze op.
-# Gebruik: kubectl apply -f one-namespace.yaml -n vng-backend-test
-# Pas zo nodig het PHP-FPM-adres aan (args): moet TCP zijn, bijv. nextcloud.<namespace>.svc:9000, met pm.status_path in de pool.
+# PHP-FPM exporter: 1× in één namespace (vng-backend-test). Incl. config-exporter voor pm.max_children etc.
+# Stap 1: kubectl apply -f configmaps.yaml -n vng-backend-test
+# Stap 2: kubectl apply -f one-namespace.yaml -n vng-backend-test
+# Pas zo nodig het PHP-FPM-adres aan (args): moet TCP zijn, bijv. nextcloud.<namespace>.svc:9000.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -31,6 +32,34 @@ spec:
           resources:
             requests: { cpu: 10m, memory: 32Mi }
             limits:   { cpu: 100m, memory: 64Mi }
+        - name: config-exporter
+          image: python:3-alpine
+          command: ["python3", "/scripts/phpfpm-config-exporter.py"]
+          env:
+            - name: CONFIG_PATH
+              value: /etc/phpfpm-config/www.conf
+            - name: PORT
+              value: "9254"
+          ports:
+            - name: config
+              containerPort: 9254
+          volumeMounts:
+            - name: phpfpm-config
+              mountPath: /etc/phpfpm-config
+              readOnly: true
+            - name: config-exporter-script
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits:   { cpu: 50m, memory: 64Mi }
+      volumes:
+        - name: phpfpm-config
+          configMap:
+            name: phpfpm-pool-config-sample
+        - name: config-exporter-script
+          configMap:
+            name: phpfpm-config-exporter-script
 ---
 apiVersion: v1
 kind: Service
@@ -46,3 +75,6 @@ spec:
     - name: metrics
       port: 9253
       targetPort: 9253
+    - name: config
+      port: 9254
+      targetPort: 9254
