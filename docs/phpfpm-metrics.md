@@ -22,6 +22,8 @@ Als jullie andere labels of poort gebruiken: pas alleen die twee in `stack/value
 
 ### Nog geen data? Debug-checklist
 
+In het dashboard **Nextcloud-omgevingen** staan nu een **PHP-FPM scrape status**-panel (1 = target wordt gescrapet) en een **PHP-FPM troubleshooting**-tekst met dezelfde stappen. Geen data daar = Prometheus scrapet de exporter niet of de exporter bereikt PHP-FPM niet.
+
 1. **ServiceMonitor voor de exporter-pod**
    ```bash
    kubectl get servicemonitor -n monitoring | grep -E 'nextcloud|phpfpm'
