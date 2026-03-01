@@ -55,6 +55,9 @@ spec:
   - repoURL: git@github.com:ConductionNL/monitoring.git
     targetRevision: main
     path: grafana/dashboards
+  - repoURL: git@github.com:ConductionNL/monitoring.git
+    targetRevision: main
+    path: servicemonitors
   syncPolicy:
     automated:
       prune: true

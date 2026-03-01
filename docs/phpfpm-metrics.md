@@ -22,27 +22,34 @@ Als jullie andere labels of poort gebruiken: pas alleen die twee in `stack/value
 
 ### Nog geen data? Debug-checklist
 
-1. **Namespace**  
-   De ServiceMonitor kijkt alleen in **vng-backend-accept** en **epe**. Staat nextcloud-metrics in een andere namespace? Voeg die dan toe onder `namespaceSelector.matchNames` in `stack/values.yaml`, push/sync.
-
-2. **ServiceMonitor bestaat en wordt geselecteerd**
+1. **ServiceMonitor voor de exporter-pod**
    ```bash
    kubectl get servicemonitor -n monitoring | grep -E 'nextcloud|phpfpm'
    ```
-   Geen resultaat? De chart verwacht **`prometheusOperator.additionalServiceMonitors`** (niet root-level). In `stack/values.yaml` staat het nu onder `prometheusOperator`; na push/sync zou de ServiceMonitor aangemaakt moeten worden.
+   Er zou **nextcloud-phpfpm-exporter** moeten staan (standalone in `servicemonitors/nextcloud-phpfpm-exporter.yaml`, door Argo gesynct). Zo niet: push + sync van de app (path `servicemonitors` staat in `apps/app-prom-prod.yaml`).
 
-3. **Target in Prometheus**  
-   Prometheus UI → Status → Targets. Zoek op `nextcloud-phpfpm` of op de namespace. Staat de target erbij en is die **Up**? Zo niet: foutmelding op de target bekijken (connect, timeout, 404, etc.).
+2. **Target in Prometheus**
+   Prometheus UI → Status → Targets. Zoek op `nextcloud-phpfpm` of op `vng-backend-test`. Staat de target erbij en is die **Up**? Zo niet: klik op de target voor de fout (connection refused, timeout, no match, etc.).
 
-4. **Welke metrics levert de service?**  
-   Als de target Up is: in Prometheus of Grafana Explore query `{job="nextcloud-phpfpm"}` of `php_fpm_up`.  
-   - **Geen `php_fpm_*` / geen pm.x:** De bestaande nextcloud-metrics op 9205 is een **andere** exporter (bijv. Nextcloud-app-metrics). De PHP-FPM-panels en -alerts hebben een **echte PHP-FPM exporter** nodig (bijv. Lusitaniae phpfpm_exporter) die `php_fpm_active_processes`, `php_fpm_listen_queue`, enz. levert. Opties: die exporter als extra container/sidecar in jullie nextcloud-metrics deploy toevoegen, of apart draaien (zie `examples/nextcloud-phpfpm-exporter/`).  
-   - Wel php_fpm_*: dan zou het dashboard moeten vullen.
+3. **Wat levert de exporter lokaal?**
+   ```bash
+   kubectl -n vng-backend-test port-forward svc/nextcloud-phpfpm-exporter 9253:9253
+   ```
+   Open http://localhost:9253/metrics en zoek op `php_fpm_`. Zie je `php_fpm_up`, `php_fpm_active_processes`, enz.?  
+   - **php_fpm_up 0**: exporter draait maar kan PHP-FPM niet bereiken (verkeerd adres, geen TCP, geen pm.status_path).  
+   - Geen php_fpm_*: verkeerde image of path.  
+   - Wel php_fpm_* met waarden: dan zou Prometheus ze moeten hebben; controleer stap 2 en in Grafana Explore query `php_fpm_up` of `{job="nextcloud-phpfpm"}`.
+
+4. **Namespace in ServiceMonitor**  
+   De ServiceMonitor moet de namespace van de pod bevatten (`vng-backend-test` staat in `stack/values.yaml` bij de entry `nextcloud-phpfpm-exporter` → `namespaceSelector.matchNames`). Na wijziging: push + sync.
 
 ## Wat er in deze repo staat
 
 - **ServiceMonitor** in `stack/values.yaml`: scrapet Services met label **`app: nextcloud-metrics`** en poort **9253** in **vng-backend-accept** en **epe**. Als jullie bestaande Service andere labels/poort heeft: pas die twee in de ServiceMonitor aan (geen nieuwe workloads).
 - **Voorbeeld-manifest** `examples/nextcloud-phpfpm-exporter/`: alleen gebruiken **nadat** bewezen is dat scrapen werkt; voor als je later ergens een nieuwe exporter bij wilt zetten.
+
+**pm.max_children / pm.start_servers enz. in Grafana?**  
+Die **config**-waarden worden niet door de exporter geëxposeerd; alleen **runtime**-metrics (active, idle, total, listen_queue, max_children_reached). Het dashboard toont die runtime-metrics. De vier PM-instellingen staan in het tekstpaneel als referentie; de concrete waarden staan in je pool-config (php-fpm pool .conf).
 
 ## Wat je nodig hebt
 

@@ -1,0 +1,39 @@
+# ServiceMonitor voor PHP-FPM exporter (pod of bij deploy).
+# Wordt door Argo gesynct; Prometheus pikt hem op via label release=mon.
+# Services met label app=nextcloud-phpfpm-exporter, poort 9253, in onderstaande namespaces worden gescrapet.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nextcloud-phpfpm-exporter
+  namespace: monitoring
+  labels:
+    release: mon
+spec:
+  selector:
+    matchLabels:
+      app: nextcloud-phpfpm-exporter
+  namespaceSelector:
+    matchNames:
+      - vng-backend-accept
+      - vng-backend-test
+      - epe
+  endpoints:
+    - port: metrics
+      path: /metrics
+      scheme: http
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: nextcloud-phpfpm
+    # Config (pm.max_children etc.): alleen als je de config-exporter sidecar draait op 9254
+    - port: 9254
+      path: /metrics
+      scheme: http
+      interval: 60s
+      scrapeTimeout: 10s
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: nextcloud-phpfpm-config
