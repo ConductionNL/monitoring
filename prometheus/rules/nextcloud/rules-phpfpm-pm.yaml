@@ -1,6 +1,6 @@
 # PHP-FPM / PM (process manager) alerts voor Nextcloud en andere PHP-FPM workloads.
-# Vereist: PHP-FPM statuspagina (pm.status_path) + exporter (bijv. Lusitaniae phpfpm_exporter)
-# die door Prometheus wordt gescrapet. Metrics: php_fpm_* (FQN).
+# Vereist: PHP-FPM statuspagina (pm.status_path) + exporter (Lusitaniae php_fpm_* of hipages phpfpm_*).
+# Ondersteunt beide: php_fpm_* (Lusitaniae) en phpfpm_* (hipages/php-fpm_exporter).
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -12,7 +12,7 @@ spec:
   - name: phpfpm.pm.rules
     rules:
     - alert: PhpFpmDown
-      expr: php_fpm_up == 0
+      expr: php_fpm_up == 0 or phpfpm_up == 0
       for: 2m
       labels: { severity: critical, team: platform }
       annotations:
@@ -20,7 +20,7 @@ spec:
         description: "De PHP-FPM statuspagina is niet bereikbaar. PM-servers of child processen werken mogelijk niet. Controleer pod, exporter en pm.status_path."
 
     - alert: PhpFpmMaxChildrenReached
-      expr: php_fpm_max_children_reached > 0
+      expr: php_fpm_max_children_reached > 0 or phpfpm_max_children_reached > 0
       for: 1m
       labels: { severity: warning, team: platform }
       annotations:
@@ -36,7 +36,7 @@ spec:
         description: "Er staan te veel requests in de wachtrij. PM is verzadigd; controleer actieve/ideale processen en pm.max_children."
 
     - alert: PhpFpmNoIdleProcesses
-      expr: php_fpm_idle_processes == 0 and php_fpm_active_processes > 0
+      expr: (php_fpm_idle_processes == 0 and php_fpm_active_processes > 0) or (phpfpm_idle_processes == 0 and phpfpm_active_processes > 0)
       for: 5m
       labels: { severity: warning, team: platform }
       annotations:

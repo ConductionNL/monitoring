@@ -25,7 +25,7 @@ spec:
           image: quay.io/lusitaniae/phpfpm-exporter:latest
           args:
             - --phpfpm.socket-paths=tcp://nextcloud.vng-backend-test.svc.cluster.local:9000
-            - --phpfpm.status-path=/status
+            - --phpfpm.status-path=/fpm-status
           ports:
             - name: metrics
               containerPort: 9253

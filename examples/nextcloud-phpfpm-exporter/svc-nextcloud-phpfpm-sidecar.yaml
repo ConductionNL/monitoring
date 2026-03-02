@@ -1,0 +1,19 @@
+# Service zodat Prometheus de phpfpm-exporter sidecar in de Nextcloud-pod kan scrapen.
+# Selector moet overeenkomen met de Nextcloud pod. Label app=nextcloud-phpfpm-exporter voor de ServiceMonitor.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-phpfpm-sidecar
+  namespace: vng-backend-test
+  labels:
+    app: nextcloud-phpfpm-exporter
+spec:
+  selector:
+    app.kubernetes.io/name: nextcloud
+    app.kubernetes.io/instance: nextcloud
+    app.kubernetes.io/component: app
+  ports:
+    - name: metrics
+      port: 9253
+      targetPort: 9253
+  type: ClusterIP

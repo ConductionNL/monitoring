@@ -38,6 +38,17 @@ De test-pod in vng-backend-test heeft alleen de runtime-exporter (9253); voor di
 
 - PHP-FPM: **pm.status_path** aan (bijv. `/status`), luisteren op **TCP** (bijv. 9000) zodat de exporter kan verbinden, of exporter als sidecar met Unix-socket.
 
+### Grafiek "PHP-FPM processen" toont No data? (php_fpm_up 0)
+
+De runtime-exporter moet PHP-FPM kunnen bereiken. Voor **vng-backend-test** is in de cluster al het volgende gedaan (kan bij volgende Argo-sync van de Nextcloud-app overschreven worden):
+
+- **ConfigMap nextcloud-phpconfig**: `listen = 0.0.0.0:9000` (was 127.0.0.1), `pm.status_path = /fpm-status`; **geen** `pm.status_listen` (zodat status op de hoofdport 9000 wordt aangeboden). Zie **patch-nextcloud-phpconfig.yaml**.
+- **Service nextcloud**: poort **9000** (phpfpm) toegevoegd.
+- **Deployment nextcloud**: container **nextcloud** heeft **containerPort 9000** (en optioneel 9001).
+- **Exporter** (one-namespace.yaml): `--phpfpm.status-path=/fpm-status` en verbinding met **nextcloud:9000**.
+
+Controle: `kubectl exec -n vng-backend-test deploy/nextcloud-phpfpm-exporter -c phpfpm-exporter -- wget -qO- http://127.0.0.1:9253/metrics | grep php_fpm_up`. Als dit nog **0** is terwijl TCP naar nextcloud:9000 wel werkt, kan het aan het FastCGI-statusprotocol liggen; overweeg dan de exporter als **sidecar** in de Nextcloud-pod te draaien (verbinding naar 127.0.0.1:9000).
+
 ## Als jullie al een nextcloud-metrics deploy hebben
 
 - **Al poort 9253 met php_fpm_* metrics?** Alleen **stack/values.yaml** pushen en syncen; de ServiceMonitor scrapet die service dan. Geen voorbeeld-pod nodig.

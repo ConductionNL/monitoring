@@ -1,0 +1,19 @@
+{
+  "name": "phpfpm-exporter",
+  "image": "quay.io/lusitaniae/phpfpm-exporter:latest",
+  "args": [
+    "--phpfpm.socket-paths=/var/run/php-fpm/www.sock",
+    "--phpfpm.status-path=/status"
+  ],
+  "ports": [
+    {
+      "name": "metrics",
+      "containerPort": 9253,
+      "protocol": "TCP"
+    }
+  ],
+  "resources": {
+    "requests": { "cpu": "10m", "memory": "32Mi" },
+    "limits": { "cpu": "100m", "memory": "64Mi" }
+  }
+}

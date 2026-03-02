@@ -68,6 +68,21 @@ De keten is: **config-exporter in de pod** → **Service met poort 9254** → **
 
 **Geen data in de panels?** Meestal ontbreekt stap 4 of 5: de ServiceMonitor is niet gesynct (Argo-app voor `servicemonitors` syncen), of Prometheus pikt alleen de eerste endpoint van de ServiceMonitor op en niet de tweede. Controleer in Prometheus Targets of er **twee** targets zijn voor deze Service (één job=nextcloud-phpfpm, één job=nextcloud-phpfpm-config).
 
+### Grafiek "PHP-FPM processen (actief / idle / totaal)" toont "No data"
+
+Die grafiek gebruikt de **runtime-exporter** (poort 9253, job `nextcloud-phpfpm`). Als de exporter **PHP-FPM niet kan bereiken**, geeft hij alleen `php_fpm_up 0` en geen actief/idle/totaal.
+
+**Controleren:**  
+`kubectl exec -n vng-backend-test deploy/nextcloud-phpfpm-exporter -c phpfpm-exporter -- wget -qO- http://127.0.0.1:9253/metrics | grep php_fpm_up`  
+→ Staat daar **php_fpm_up 0**? Dan faalt de verbinding.
+
+**Oplossing:** In de **Nextcloud/PHP-FPM**-deploy in die namespace:
+
+1. **PHP-FPM op TCP 9000** – De exporter praat met `nextcloud.<namespace>.svc.cluster.local:9000`. De Nextcloud-service moet PHP-FPM op poort 9000 (TCP) exposeën, niet alleen een Unix-socket.
+2. **Statuspagina aan** – In de poolconfig (bijv. `www.conf`): `pm.status_path = /status`. Zonder dit levert de status-URL niets op.
+
+Na aanpassing herstart je de PHP-FPM-pod (of de hele Nextcloud-pod). Daarna zou de exporter `php_fpm_up 1` en de overige metrics moeten geven en de grafiek vullen.
+
 ## Wat je nodig hebt
 
 1. **PHP-FPM statuspagina**  
