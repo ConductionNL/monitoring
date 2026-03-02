@@ -51,7 +51,7 @@ In het dashboard **Nextcloud-omgevingen** staan nu een **PHP-FPM scrape status**
 - **Voorbeeld-manifest** `examples/nextcloud-phpfpm-exporter/`: alleen gebruiken **nadat** bewezen is dat scrapen werkt; voor als je later ergens een nieuwe exporter bij wilt zetten.
 
 **pm.max_children / pm.start_servers enz. in Grafana?**  
-Die **config**-waarden worden niet door de exporter geëxposeerd; alleen **runtime**-metrics (active, idle, total, listen_queue, max_children_reached). Het dashboard toont die runtime-metrics. De vier PM-instellingen staan in het tekstpaneel als referentie; de concrete waarden staan in je pool-config (php-fpm pool .conf).
+De **config-exporter** (examples/nextcloud-phpfpm-exporter/) serveert die vier waarden op poort 9254; het dashboard filtert op `job="nextcloud-phpfpm-config"`. Geen data? In Grafana Explore: `php_fpm_config_max_children` of `up{job="nextcloud-phpfpm-config"}`. Staat de target in Prometheus (Status → Targets) op Up voor job nextcloud-phpfpm-config?
 
 ## Wat je nodig hebt
 

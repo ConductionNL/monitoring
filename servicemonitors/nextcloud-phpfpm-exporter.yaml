@@ -31,7 +31,7 @@ spec:
           targetLabel: namespace
           action: replace
     # Config (pm.max_children etc.): alleen als je de config-exporter sidecar draait op 9254
-    - port: 9254
+    - port: config
       path: /metrics
       scheme: http
       interval: 60s
