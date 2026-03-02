@@ -51,7 +51,22 @@ In het dashboard **Nextcloud-omgevingen** staan nu een **PHP-FPM scrape status**
 - **Voorbeeld-manifest** `examples/nextcloud-phpfpm-exporter/`: alleen gebruiken **nadat** bewezen is dat scrapen werkt; voor als je later ergens een nieuwe exporter bij wilt zetten.
 
 **pm.max_children / pm.start_servers enz. in Grafana?**  
-De **config-exporter** (examples/nextcloud-phpfpm-exporter/) serveert die vier waarden op poort 9254; het dashboard filtert op `job="nextcloud-phpfpm-config"`. Geen data? In Grafana Explore: `php_fpm_config_max_children` of `up{job="nextcloud-phpfpm-config"}`. Staat de target in Prometheus (Status → Targets) op Up voor job nextcloud-phpfpm-config?
+De **config-exporter** (examples/nextcloud-phpfpm-exporter/) serveert die vier waarden op poort 9254; het dashboard filtert op `job="nextcloud-phpfpm-config"`.
+
+### Hoe en wat: waarom de 4 pm.xxx-panels vullen (of niet)
+
+De keten is: **config-exporter in de pod** → **Service met poort 9254** → **ServiceMonitor met endpoint `port: config`** → **Prometheus scrapet** → **Grafana toont `job="nextcloud-phpfpm-config"`**.
+
+| Stap | Wat | Waar te controleren |
+|------|-----|---------------------|
+| 1 | Pod heeft **twee** containers: `phpfpm-exporter` (9253) en `config-exporter` (9254). | `kubectl get pods -n vng-backend-test -l app=nextcloud-phpfpm-exporter` → READY moet **2/2** zijn. |
+| 2 | Service heeft **twee** poorten: `metrics` (9253) en **`config`** (9254). | `kubectl get svc -n vng-backend-test nextcloud-phpfpm-exporter -o yaml` → onder `spec.ports` zowel 9253 als 9254. |
+| 3 | Config-exporter geeft metrics op 9254. | `kubectl exec -n vng-backend-test deploy/nextcloud-phpfpm-exporter -c config-exporter -- wget -qO- http://127.0.0.1:9254/metrics` → moet `php_fpm_config_max_children` tonen. |
+| 4 | **ServiceMonitor** staat in de cluster en heeft **twee** endpoints (port `metrics` en port **`config`**). | `kubectl get servicemonitor -n monitoring nextcloud-phpfpm-exporter -o yaml` → onder `spec.endpoints` twee items; tweede met `port: config`. Wordt door Argo gesynct uit `servicemonitors/` (zie `apps/app-prom-prod.yaml`). |
+| 5 | Prometheus scrapet de target voor job **nextcloud-phpfpm-config**. | Prometheus UI → Status → Targets → zoek op `nextcloud-phpfpm-config` of op poort 9254. Staat die target op **Up**? |
+| 6 | Grafana haalt de metrics op. | Grafana → Explore (Prometheus) → query `php_fpm_config_max_children` of `up{job="nextcloud-phpfpm-config"}`. Zie je waarden (bijv. 50, 5, 5, 35)? |
+
+**Geen data in de panels?** Meestal ontbreekt stap 4 of 5: de ServiceMonitor is niet gesynct (Argo-app voor `servicemonitors` syncen), of Prometheus pikt alleen de eerste endpoint van de ServiceMonitor op en niet de tweede. Controleer in Prometheus Targets of er **twee** targets zijn voor deze Service (één job=nextcloud-phpfpm, één job=nextcloud-phpfpm-config).
 
 ## Wat je nodig hebt
 
