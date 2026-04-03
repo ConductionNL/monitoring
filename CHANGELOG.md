@@ -5,6 +5,20 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 ## [Unreleased]
 
 ### Toegevoegd
+- `loki/values.yaml` — Helm values voor grafana/loki (SingleBinary, S3-opslag, 7d retentie)
+- `loki/alloy-values.yaml` — Helm values voor grafana/alloy (DaemonSet log-collectie)
+- `loki/alloy-config.yaml` — Alloy pipeline config (Kubernetes pod discovery, namespace/pod/container/node labels, kube-system exclusie)
+- `loki/datasource-loki.yaml` — Grafana sidecar datasource ConfigMap voor Loki
+- `loki/alerts/hydra-pipeline-failures.yaml` — HydraPipelineFailure LogQL alert rule via Grafana Alerting (Slack routing: TODO, wordt apart opgepakt)
+- `loki/secret-loki-s3.sops.yaml` — SOPS-versleuteld Secret met S3-credentials
+- `apps/app-loki-prod.yaml` — ArgoCD Application voor Loki stack (multi-source: Loki chart + Alloy chart + Git manifests)
+- `docs/rules/HydraPipelineFailure.md` — runbook voor log-gebaseerde Hydra pipeline alert
+- `openspec/changes/loki-stack/` — OpenSpec change: proposal, specs, design, tasks
+
+### Gewijzigd
+- `stack/values.yaml` — `unified_alerting.enabled: true` toegevoegd aan `grafana.ini` (vereist voor Grafana Alerting)
+- `.sops.yaml` — creation rule voor `loki/secret-*.sops.yaml` toegevoegd
+
 - `grafana/.env.example` — `NEXTCLOUD_NAMESPACES` (komma-gescheiden) voor Nextcloud-dashboard; script leest dit en past dashboard in cluster aan
 - `scripts/grafana-nextcloud-dashboard-apply.sh` — past Nextcloud-dashboard toe met namespaces uit `grafana/.env`
 - `prometheus/rules/nextcloud/rules-phpfpm-pm.yaml` — PHP-FPM/PM-alerts (PhpFpmDown, PhpFpmMaxChildrenReached, PhpFpmListenQueueHigh, PhpFpmNoIdleProcesses)
