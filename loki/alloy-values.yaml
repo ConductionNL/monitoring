@@ -1,0 +1,33 @@
+# Helm values voor grafana/alloy chart
+# Deployt Alloy als DaemonSet voor log-collectie
+# Chart: https://grafana.github.io/helm-charts (grafana/alloy)
+
+alloy:
+  # -- Alloy configuratie wordt geladen uit externe ConfigMap (alloy-config.yaml)
+  configMap:
+    create: false
+    name: alloy-config
+    key: config.alloy
+
+# -- DaemonSet: één Alloy pod per node voor volledige log-dekking
+controller:
+  type: daemonset
+
+# -- Resources per Alloy pod
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# -- Tolerations: schedule op alle nodes (inclusief control-plane als gewenst)
+# tolerations:
+#   - operator: Exists
+
+# -- ServiceMonitor zodat Prometheus de Alloy-metrics scrapet
+serviceMonitor:
+  enabled: true
+  labels:
+    release: mon

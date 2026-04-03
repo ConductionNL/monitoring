@@ -1,0 +1,90 @@
+# Helm values voor grafana/loki chart
+# Deployt Loki in SingleBinary mode binnen monitoring namespace
+# Chart: https://grafana.github.io/helm-charts (grafana/loki)
+
+loki:
+  # -- SingleBinary: alle componenten in één pod (eenvoudigst, voldoende tot ~20 GB/dag)
+  # Schakel over naar SimpleScalable als ingestie-volume groeit
+  deploymentMode: SingleBinary
+
+  auth_enabled: false
+
+  # -- Opslag: S3-compatible (Ceph RGW, MinIO, etc.)
+  # Endpoint, bucket en regio zijn configureerbaar — geen provider-specifieke hardcoding
+  storage:
+    type: s3
+    s3:
+      endpoint: ${S3_ENDPOINT}          # bijv. s3.fuga.cloud of minio.local:9000
+      bucketnames: loki-chunks
+      region: ${S3_REGION}              # bijv. eu-west-1
+      access_key_id: ${AWS_ACCESS_KEY_ID}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+      s3ForcePathStyle: true            # vereist voor Ceph/MinIO
+      insecure: false
+
+  # -- Filesystem fallback (voor lokaal testen — deactiveer S3 hierboven)
+  # storage:
+  #   type: filesystem
+  #   filesystem:
+  #     chunks_directory: /var/loki/chunks
+  #     rules_directory: /var/loki/rules
+
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+  # -- Retentie: standaard 7 dagen, pas aan naar behoefte
+  # Verhoog voor audit/compliance, verlaag om opslagkosten te beperken
+  limits_config:
+    retention_period: 168h            # 7 dagen
+    max_query_series: 500
+    max_query_parallelism: 2
+
+  compactor:
+    retention_enabled: true
+    working_directory: /var/loki/compactor
+    delete_request_store: s3
+
+  # -- Ruler uitgeschakeld: alle alerting gaat via Grafana Unified Alerting
+  ruler:
+    enabled: false
+
+# -- SingleBinary replica's en resources
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 10Gi
+
+# -- S3-credentials uit Kubernetes Secret (SOPS-versleuteld in Git)
+extraEnvFrom:
+  - secretRef:
+      name: loki-s3-credentials
+
+# -- Gateway uitschakelen (intern cluster-verkeer, geen externe toegang nodig)
+gateway:
+  enabled: false
+
+# -- Monitoring: serviceMonitor voor Loki zelf (optioneel, Prometheus scrapet Loki-metrics)
+monitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: mon
+
+# -- Test pod uitschakelen
+test:
+  enabled: false

@@ -113,6 +113,8 @@ grafana:
   grafana.ini:
     server:
       root_url: https://grafana.commonground.nu/
+    unified_alerting:
+      enabled: true
     auth.generic_oauth:
       enabled: true
       name: Keycloak

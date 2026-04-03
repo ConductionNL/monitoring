@@ -1,4 +1,9 @@
 creation_rules:
   - path_regex: ^alerting/secret-.*\.sops\.yaml$
     encrypted_regex: '^(data|stringData)$'
-    age: []
+    age:
+      - age1l2k984dx2876w786fuw3j5hz34k4ahuwzq8qfmjcnlk4mxvl2alqdyehmy
+  - path_regex: ^loki/secret-.*\.sops\.yaml$
+    encrypted_regex: '^(data|stringData)$'
+    age:
+      - age1l2k984dx2876w786fuw3j5hz34k4ahuwzq8qfmjcnlk4mxvl2alqdyehmy
