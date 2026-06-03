@@ -17,45 +17,45 @@ spec:
       releaseName: mon
       valueFiles:
       - $values/stack/values.yaml
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     ref: values
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/coredns
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/pods
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: alerting
     directory:
       recurse: true
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/images
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/storage
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/ingress
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/certmanager
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/hpa
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/deploy
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: prometheus/rules/nextcloud
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: grafana/dashboards
-  - repoURL: git@github.com:ConductionNL/monitoring.git
+  - repoURL: https://codeberg.org/Conduction/monitoring.git
     targetRevision: main
     path: servicemonitors
   syncPolicy:
