@@ -57,7 +57,7 @@ monitoring/
    ```
 3. Argo CD repo-server: age private key in cluster (SOPS decrypt tijdens sync).
 4. **Syncen**: `kubectl -n argocd apply -f apps/app-prom-prod.yaml`
-5. **Verifiëren**: port-forward naar Prometheus (9090), Alertmanager (9093), Grafana (3000) — zie `docs/README.md` voor exacte commando’s.
+5. **Verifiëren**: port-forward naar Prometheus (9090), Alertmanager (9093), Grafana (3000) — zie `docs/index.md` voor exacte commando’s.
 
 ## Belangrijke keuzes
 

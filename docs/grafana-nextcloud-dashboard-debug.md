@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # Nextcloud-dashboard: geen data?
 
 Als het dashboard "Nextcloud-omgevingen" leeg blijft, controleer het volgende in **Grafana → Explore** (datasource: Prometheus).

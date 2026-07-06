@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # CoreDNS Extended Alerts
 
 - Bron: `prometheus/rules/coredns/rules-coredns-extended.yaml`

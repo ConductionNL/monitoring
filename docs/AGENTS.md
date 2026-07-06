@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # Afspraken voor Cursor-agents (multi-agent)
 
 Dit document beschrijft hoe meerdere Cursor-agent-sessies in deze repo kunnen samenwerken zonder elkaar in de weg te lopen.
@@ -17,7 +22,7 @@ Dit document beschrijft hoe meerdere Cursor-agent-sessies in deze repo kunnen sa
 
 ## Rolverdeling (aanbevolen)
 - **Agent die “documentatie / changelog in de gaten houdt”**  
-  Verantwoordelijk voor het actueel houden van `CHANGELOG.md`. Kan op basis van git status of wat de andere agent in de chat meldt de changelog bijwerken. Beperk wijzigingen aan andere bestanden tot wat nodig is voor documentatie (bijv. `docs/README.md`, `docs/rules/*.md`).
+  Verantwoordelijk voor het actueel houden van `CHANGELOG.md`. Kan op basis van git status of wat de andere agent in de chat meldt de changelog bijwerken. Beperk wijzigingen aan andere bestanden tot wat nodig is voor documentatie (bijv. `docs/index.md`, `docs/rules/*.md`).
 
 - **Agent die features/config doet**  
   Focust op rules, Helm values, Argo CD, Grafana, Alertmanager, etc. Meldt aan het einde van een taak **wat er gewijzigd is** (bestanden + korte omschrijving), zodat de documentatie-agent of dezelfde agent de changelog kan bijwerken.

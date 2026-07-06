@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # CoreDNSNotReady
 
 - Bron: `prometheus/rules/coredns/rules-coredns.yaml`

@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # PhpFpmNoIdleProcesses
 
 - Bron: `prometheus/rules/nextcloud/rules-phpfpm-pm.yaml`

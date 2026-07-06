@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # HPAMaxedOut
 
 - Bron: `prometheus/rules/hpa/rules-hpa-maxed.yaml`

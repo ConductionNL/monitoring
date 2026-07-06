@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # PHP-FPM / PM metrics en alerts
 
 De alerts voor PHP-FPM gebruiken metrics van een **PHP-FPM exporter**. Eerst **bewijzen dat het werkt met wat er al in de namespace staat**; daarna pas eventueel extra implementatie.

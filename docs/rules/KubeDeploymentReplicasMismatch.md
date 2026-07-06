@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # KubeDeploymentReplicasMismatch
 
 - Bron: **kube-prometheus-stack** default rules (niet in deze repo; zit in de Helm chart).

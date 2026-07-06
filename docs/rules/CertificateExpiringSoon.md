@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # CertificateExpiringSoon
 
 - Bron: `prometheus/rules/certmanager/rules-cert-expiry.yaml`

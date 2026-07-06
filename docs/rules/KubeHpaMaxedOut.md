@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # KubeHpaMaxedOut
 
 - Bron: **kube-prometheus-stack** (standaard regel, niet in deze repo).

@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # ImagePullError
 
 - Bron: `prometheus/rules/images/rules-imagepull.yaml`

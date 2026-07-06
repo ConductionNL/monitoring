@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # IngressHigh5xx
 
 - Bron: `prometheus/rules/ingress/rules-nginx-5xx.yaml`

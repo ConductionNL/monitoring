@@ -1,6 +1,17 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # Monitoring documentation
 
 Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze test.
+
+> **Huisstijl runbooks:** elke pagina onder `rules/` volgt bewust één vast
+> sjabloon (Bron / Betekenis / Trigger / Runbook / Routing) — referentie en
+> handelingsstappen op één pagina, omdat je ze tijdens een alert samen nodig
+> hebt. Dit is een vastgelegde uitzondering op de één-paginatype-regel uit
+> het docs-contract (techbook `docs/conventies.md`).
 
 ## Inhoud
 - **PHP-FPM/PM**: Zie `phpfpm-metrics.md` voor het aanzetten van metrics (exporter + ServiceMonitor). Alerts: `rules/PhpFpmDown.md`, enz.
@@ -53,5 +64,5 @@ kubectl -n monitoring port-forward svc/mon-grafana 3000:80
   kubectl -n monitoring wait --for=condition=complete job -l app=connectivity-smoke --timeout=120s
   ```
 
-Opmerking: een automatische CI-run na push is voorlopig uitgeschakeld i.v.m. roterende kubeconfig. Zie `docs/ROADMAP.md` voor het plan (ServiceAccount + stabiel kubeconfig-secret voor CI).
+Opmerking: een automatische CI-run na push is voorlopig uitgeschakeld i.v.m. roterende kubeconfig. Zie `ROADMAP.md` (repo-root) voor het plan (ServiceAccount + stabiel kubeconfig-secret voor CI).
 

@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # PodPendingLong
 
 - Bron: `prometheus/rules/pods/rules-podpending.yaml`

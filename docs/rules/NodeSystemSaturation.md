@@ -1,3 +1,8 @@
+---
+last_reviewed: 2026-07-06
+owner: mark
+---
+
 # NodeSystemSaturation
 
 - Bron: **kube-prometheus-stack** (standaard regel, node-exporter).
