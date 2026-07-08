@@ -51,6 +51,16 @@ for f in sorted(pathlib.Path("prometheus/rules").rglob("*.yaml")):
                     if not r.get("expr"):
                         errors.append(f"{f}: alert {r['alert']} zonder expr")
 
+# Doc-assertion (docs-claims): docs/index.md belooft dat elke regel het
+# label release: mon draagt (ruleSelector) — anders is hij dode config.
+for f in sorted(pathlib.Path("prometheus/rules").rglob("*.yaml")):
+    for doc in yaml.safe_load_all(f.read_text()):
+        if doc and doc.get("kind") == "PrometheusRule":
+            labels = (doc.get("metadata") or {}).get("labels") or {}
+            if labels.get("release") != "mon":
+                errors.append(f"{f}: mist label release: mon "
+                              "(Prometheus pakt deze regel niet op)")
+
 # Dekking: eigen pagina docs/rules/<Alert>.md, of expliciet genoemd in
 # een verzamelpagina (huisstijl: CoreDNSExtended bundelt zes alerts).
 pages = list(pathlib.Path("docs/rules").glob("*.md"))
