@@ -1,16 +1,22 @@
 ---
-last_reviewed: 2026-07-06
+last_reviewed: 2026-07-10
 owner: mark
 ---
 
 # Alerting (Slack + SOPS)
 
 ## Overzicht
-- Alertmanager config: `alerting/alertmanager.yaml` (routes/receivers)
-- Slack secret (SOPS): `alerting/secret-alertmanager.sops.yaml`
-- Helm values koppelen de config en mounten het secret:
-  - `alertmanager.configMapOverrideName: mon-kube-prometheus-stack-alertmanager`
-  - `alertmanager.alertmanagerSpec.secrets: [alertmanager-slack-webhook]`
+- Alertmanager config (routes/receivers): **inline** in
+  `stack/values.yaml` onder `alertmanager.config` — dáár wijzig je
+  routing.
+- Slack secret (SOPS): `alerting/secret-alertmanager.sops.yaml`,
+  gemount via `alertmanager.alertmanagerSpec.secrets:
+  [alertmanager-slack-webhook]`; de webhook wordt gelezen via
+  `api_url_file`.
+- **Legacy**: `alerting/alertmanager.yaml` (ConfigMap voor het oude
+  `configMapOverrideName`-mechanisme) wordt nergens meer gerefereerd —
+  kandidaat voor verwijdering na teambevestiging (semantische review
+  2026-07-10).
 
 ## Repo-server (Argo CD) voorbereiden
 - Zorg dat `argocd-repo-server` kan decrypten met SOPS/age:
