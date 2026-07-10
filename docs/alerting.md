@@ -13,10 +13,10 @@ owner: mark
   gemount via `alertmanager.alertmanagerSpec.secrets:
   [alertmanager-slack-webhook]`; de webhook wordt gelezen via
   `api_url_file`.
-- **Legacy**: `alerting/alertmanager.yaml` (ConfigMap voor het oude
-  `configMapOverrideName`-mechanisme) wordt nergens meer gerefereerd —
-  kandidaat voor verwijdering na teambevestiging (semantische review
-  2026-07-10).
+- **Opgeruimd (2026-07-10)**: de legacy ConfigMap
+  `alerting/alertmanager.yaml` (oude `configMapOverrideName`-route) is
+  uit de repo verwijderd. Leeft de gelijknamige ConfigMap nog als wees
+  op het cluster, dan is opruimen mensenwerk — eerst mounts checken.
 
 ## Repo-server (Argo CD) voorbereiden
 - Zorg dat `argocd-repo-server` kan decrypten met SOPS/age:
