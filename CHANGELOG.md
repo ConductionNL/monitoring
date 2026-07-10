@@ -23,6 +23,7 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 - `CHANGELOG.md` — dit bestand
 
 ### Gewijzigd
+- 2026-07-10: `docs/index.md` en `docs/alerting.md` — verouderde verwijzingen naar legacy `alerting/alertmanager.yaml` rechtgetrokken: routing/receivers staan inline in `stack/values.yaml` onder `alertmanager.config`; Slack-kanaal wordt bepaald door de webhook-URL (SOPS), niet door een `channel:`-veld (follow-up semantische review 2026-07-10)
 - `apps/app-prom-prod.yaml` — source `prometheus/rules/nextcloud` toegevoegd voor PHP-FPM rules
 - `grafana/README.md` — Nextcloud-namespaces via .env + script; dashboards-sectie
 - `docs/README.md` — PHP-FPM/PM rules en link naar phpfpm-metrics.md

@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-06
+last_reviewed: 2026-07-10
 owner: mark
 ---
 
@@ -27,9 +27,12 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 - Ze worden opgepakt door Prometheus via `ruleSelector.matchLabels.release: mon`.
 
 ## Routing van alerts
-- Alertmanager configuratie: `alerting/alertmanager.yaml`
+- Alertmanager configuratie (routes/receivers): inline in `stack/values.yaml`
+  onder `alertmanager.config` — zie `docs/alerting.md` voor de details.
 - Slack webhook (SOPS secret): `alerting/secret-alertmanager.sops.yaml`
-- Voor e-mail of extra kanalen: voeg een receiver toe in `alerting/alertmanager.yaml` en (indien nodig) een extra secret.
+- Voor e-mail of extra kanalen: voeg een receiver toe onder
+  `alertmanager.config.receivers` in `stack/values.yaml` en (indien nodig)
+  een extra secret.
 
 ## Testen
 - Forceer een bekende conditie (zie elk rule-document) en controleer in:

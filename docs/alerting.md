@@ -40,7 +40,11 @@ kubectl -n monitoring delete secret alertmanager-slack-webhook
 ```
 
 ## Slack kanaal wijzigen
-- Pas in `alerting/alertmanager.yaml` de `slack_configs[].channel` aan (bijv. `#k8s-alerts`).
+- Het kanaal wordt bepaald door de incoming-webhook-URL zelf (er staat
+  geen `channel:` in `slack_configs`; de webhook is aan één kanaal
+  gebonden).
+- Maak in Slack een webhook aan voor het nieuwe kanaal en versleutel die
+  opnieuw via `bootstrap_sops.sh` (zie "Secret versleutelen" hierboven).
 - Commit & push; Argo sync → Alertmanager herlaadt.
 
 ## Test
