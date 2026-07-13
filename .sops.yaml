@@ -1,4 +1,11 @@
+# SOPS encryption rules. Twee publieke age-recipients (veilig te committen): de
+# primaire sleutel (privaat alleen op con-prod, Secret `sops-age` in ns con-ci, +
+# operator-backup) en een escrow-sleutel (custodian info@conduction.nl, offline
+# escrow) — zelfde sleutelpaar als talos (besluit review WP4, 2026-07-13).
+# Let op: alerting/secret-alertmanager.sops.yaml is nog een placeholder; een
+# toekomstige bootstrap versleutelt direct naar beide recipients. Custody:
+# docs/alerting.md.
 creation_rules:
   - path_regex: ^alerting/secret-.*\.sops\.yaml$
     encrypted_regex: '^(data|stringData)$'
-    age: []
+    age: age1wr3tvh8j52xrfmyjwuxk2hrcxmggqz72evjh3m25d4s6sgm0z9lqc8nd33,age13zmwxwgtn86w8fhs28cx90nyp2r8hq9a78p6ufrcer75e9u9j5pszfndpx

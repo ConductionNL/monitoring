@@ -4,6 +4,14 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Toegevoegd — 2026-07-13 (SOPS-recipients + custody — review WP4, openspec add-sops-second-recipient)
+- `.sops.yaml`: beide age-recipients ingevuld (primair + escrow, custodian
+  info@conduction.nl) — de lijst was leeg; een toekomstige bootstrap versleutelt direct
+  naar twee sleutels. Zelfde sleutelpaar als talos (besluit WP4).
+- `docs/alerting.md`: key-custody-paragraaf + stub-status expliciet benoemd
+  (`secret-alertmanager.sops.yaml` is een placeholder; `bootstrap_sops.sh` ontbreekt
+  in `scripts/`).
+
 ### Toegevoegd
 - `grafana/.env.example` — `NEXTCLOUD_NAMESPACES` (komma-gescheiden) voor Nextcloud-dashboard; script leest dit en past dashboard in cluster aan
 - `scripts/grafana-nextcloud-dashboard-apply.sh` — past Nextcloud-dashboard toe met namespaces uit `grafana/.env`

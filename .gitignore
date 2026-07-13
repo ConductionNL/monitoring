@@ -1,6 +1,9 @@
 *:Zone.Identifier
-age.agekey
 repo-ssh-*.yaml
 .env
 grafana/.env
 
+# age-sleutelmateriaal — elk privaat keybestand, ongeacht naam
+*.agekey
+*.key
+key.txt

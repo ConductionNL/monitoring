@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-10
+last_reviewed: 2026-07-13
 owner: mark
 ---
 
@@ -17,6 +17,30 @@ owner: mark
   `alerting/alertmanager.yaml` (oude `configMapOverrideName`-route) is
   uit de repo verwijderd. Leeft de gelijknamige ConfigMap nog als wees
   op het cluster, dan is opruimen mensenwerk — eerst mounts checken.
+- **Stub-status (2026-07-13)**: `alerting/secret-alertmanager.sops.yaml`
+  is nog een placeholder van één regel — er is hier nog niets écht
+  versleuteld. Het hieronder genoemde `bootstrap_sops.sh` staat (nog)
+  niet in `scripts/`; wie de secret echt aanmaakt, volgt de
+  sops-procedure handmatig of zet dat script eerst terug. `.sops.yaml`
+  heeft inmiddels wél beide recipients, zodat een bootstrap direct naar
+  twee sleutels versleutelt.
+
+## Key-custody (review WP4, 2026-07-13)
+
+Twee age-recipients in `.sops.yaml`; alles wordt naar beide versleuteld,
+elk van de twee private keys kan ontsleutelen:
+
+| Sleutel | Publieke recipient | Private key leeft | Custodian |
+|---|---|---|---|
+| primair | `age1wr3t…c8nd33` | con-prod (Secret `sops-age`, ns `con-ci`) + operator-backup | operator (mark) |
+| escrow | `age13zm…zfndpx` | offline escrow (nooit op cluster, nooit in git) | info@conduction.nl |
+
+Zelfde sleutelpaar als de talos runner-secrets (besluit WP4: één paar
+volstaat op deze schaal). Rotatie: nieuwe key genereren, recipient
+toevoegen aan `.sops.yaml`, `sops updatekeys` per bestand, oude
+recipient verwijderen, nogmaals `updatekeys` — plaintext hoeft er nooit
+opnieuw in. Uitgebreider rotatiepad: talos
+`manifests/components/runner-secrets/README.md`.
 
 ## Repo-server (Argo CD) voorbereiden
 - Zorg dat `argocd-repo-server` kan decrypten met SOPS/age:
