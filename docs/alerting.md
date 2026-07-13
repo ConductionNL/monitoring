@@ -1,6 +1,6 @@
 ---
 last_reviewed: 2026-07-13
-owner: mark
+owner: info@conduction.nl
 ---
 
 # Alerting (Slack + SOPS)

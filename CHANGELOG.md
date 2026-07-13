@@ -4,6 +4,11 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-07-13 (eigenaarschap → info@conduction.nl, review WP8)
+- Alle `owner:`-front-matter en CODEOWNERS omgezet van `mark` naar
+  `info@conduction.nl` (opvolging na 2026-08-31). Voorbereid op branch
+  `chore/wp8-ownership`; review, merge en push door een mens.
+
 ### Toegevoegd — 2026-07-13 (SOPS-recipients + custody — review WP4, openspec add-sops-second-recipient)
 - `.sops.yaml`: beide age-recipients ingevuld (primair + escrow, custodian
   info@conduction.nl) — de lijst was leeg; een toekomstige bootstrap versleutelt direct
