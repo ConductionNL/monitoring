@@ -36,7 +36,7 @@ Mogelijk verminderde beschikbaarheid of capaciteit van de workload.
    - Zie ook [Debugging Pods](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/#debugging-pods).
 
 ## Verwachte routing
-- Default receiver (bijv. `team-platform-slack`), tenzij er een specifieke route voor deze alert is.
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`), tenzij er een specifieke route voor deze alert is.
 
 ## Opmerking
 - De 15 min-evaluatie is in de stack vastgelegd; bij zeer trage rollouts (bijv. CI) kan de alert eerder vuren dan dat de rollout klaar is.

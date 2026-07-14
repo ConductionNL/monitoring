@@ -21,7 +21,7 @@ De CoreDNS health metric laat geen requests zien. De expressie kijkt 5 minuten l
 3. Verifieer de Corefile configuratie.
 
 ## Verwachte routing
-- Default receiver: Slack `#k8s-alerts` via Alertmanager.
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test (alleen veilig in testomgeving!)
 - (Impactvol) Schaal CoreDNS tijdelijk terug:

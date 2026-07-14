@@ -26,7 +26,7 @@ De PHP-FPM statuspagina (PM) is niet bereikbaar. De exporter kan geen metrics op
 4. **Socket/path**: Klopt het socket-path dat de exporter gebruikt met de daadwerkelijke PHP-FPM socket?
 
 ## Verwachte routing
-- Default receiver (bijv. `team-platform-slack`); kan naar specifieke receiver voor Nextcloud/PM.
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`); kan naar een specifieke receiver voor Nextcloud/PM.
 
 ## Zie ook
 - PhpFpmMaxChildrenReached, PhpFpmListenQueueHigh, PhpFpmNoIdleProcesses voor andere PM-alerts.

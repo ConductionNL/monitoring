@@ -27,4 +27,4 @@ Er zijn geen idle child processen; alle PHP-FPM workers zijn actief. Nieuwe requ
 - **pm.start_servers** afstemmen op min/max spare zodat er bij start al voldoende workers zijn.
 
 ## Verwachte routing
-- Default (bijv. team-platform-slack).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).

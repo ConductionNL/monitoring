@@ -4,6 +4,13 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-07-14 (runbooks: receiver vs Slack-kanaal ontward)
+- 11 runbooks noemden de routing inconsistent ("team-platform-slack" of
+  "#k8s-alerts" door elkaar). Nu overal één regel: Alertmanager-receiver
+  `team-platform-slack` → Slack-kanaal `#k8s-alerts` (kanaal hangt aan de
+  webhook-URL). Gevonden doordat de platform-assistent de dubbelzinnige
+  bron letterlijk citeerde en dat als hallucinatie werd gelezen.
+
 ### Gewijzigd — 2026-07-13 (eigenaarschap → info@conduction.nl, review WP8)
 - Alle `owner:`-front-matter en CODEOWNERS omgezet van `mark` naar
   `info@conduction.nl` (opvolging na 2026-08-31). Voorbereid op branch

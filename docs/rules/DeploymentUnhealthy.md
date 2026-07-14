@@ -21,7 +21,7 @@ Een deployment heeft replicas in status "unavailable" (niet beschikbaar) geduren
 3. Controleer ReplicaSet en rollout status; bij image/config fouten: fix en eventueel rollback.
 
 ## Verwachte routing
-- Slack default receiver (`team-platform-slack`).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test (non-prod)
 - Zet een test-deployment op een niet-bestaande image of met een invalid config; wacht 1m tot de alert vuurt.

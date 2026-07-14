@@ -26,7 +26,7 @@ Een container blijft hangen met reden `CreateContainerConfigError` (vaak door on
 3. Fix de referentie of maak de ontbrekende resource aan, daarna herstart/rollout.
 
 ## Verwachte routing
-- Default receiver: Slack `#k8s-alerts` via Alertmanager.
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test
 - Maak een pod/deployment met een niet-bestaande `ConfigMap` referentie:

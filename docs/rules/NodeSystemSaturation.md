@@ -59,7 +59,7 @@ Een **load per core van 930** is in de praktijk onrealistisch; een echte machine
    - Controleren of er relabels of meerdere scrapes zijn die de ratio kapot maken; indien nodig default rule uitzetten tot het is opgelost: `defaultRules.disabled.NodeSystemSaturation: true` in `stack/values.yaml`.
 
 ## Verwachte routing
-- Slack via default receiver (`team-platform-slack`).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test (non-prod)
 - Op een testnode kunstmatig hoge CPU-load genereren (bijv. `stress-ng`) en wachten tot de alert vuurt; daarna load stoppen en Resolved controleren.

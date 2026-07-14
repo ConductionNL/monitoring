@@ -30,7 +30,7 @@ owner: info@conduction.nl
 4. Bij SERVFAIL/REFUSED: bekijk upstream resolvers, timeouts en policy.
 
 ## Verwachte routing
-- Slack default receiver (`#k8s-alerts`) via Alertmanager.
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test (alleen non-prod)
 - Schaal CoreDNS tijdelijk terug of wijzig (tijdelijk) Corefile om errorratio te simuleren; herstel direct na verificatie.

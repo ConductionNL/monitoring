@@ -34,7 +34,7 @@ In deze repo staat ook een eigen regel **HPAMaxedOut** (vuurt na 10m). Beide ale
   3. Overweeg node-local DNS cache of tuning van CoreDNS resources/requests als het structureel voorkomt.
 
 ## Verwachte routing
-- Slack default receiver (`team-platform-slack`).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
 
 ## Test (non-prod)
 - Zet een test-HPA bewust laag (lage maxReplicas) en genereer load; na 15m zou deze alert (of na 10m onze HPAMaxedOut) moeten vuren.

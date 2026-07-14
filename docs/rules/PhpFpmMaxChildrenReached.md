@@ -27,4 +27,4 @@ Het maximum aantal child processen (pm.max_children) is minstens één keer bere
 - Na wijziging: pool herladen (`php-fpm reload` of pod herstart) en daarna de metrics opnieuw bekijken.
 
 ## Verwachte routing
-- Default (bijv. team-platform-slack).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).

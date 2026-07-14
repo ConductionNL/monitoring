@@ -27,4 +27,4 @@ Er staan te veel requests in de PHP-FPM listen queue. De process manager is verz
 - Bij aanhoudende hoge queue: ook app-optimalisatie (caching, slow queries) en eventueel meer replicas.
 
 ## Verwachte routing
-- Default (bijv. team-platform-slack).
+- Alertmanager default-receiver `team-platform-slack` → Slack-kanaal `#k8s-alerts` (het kanaal hangt aan de webhook-URL, zie `docs/alerting.md`).
