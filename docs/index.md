@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-10
+last_reviewed: 2026-07-14
 owner: info@conduction.nl
 ---
 
@@ -20,7 +20,7 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 - **CoreDNS (extended)**: `rules/CoreDNSExtended.md`
 - **Pods**: `rules/CreateContainerConfigError.md`, `rules/PodPendingLong.md`
 - **Overige**: HPA (`HPAMaxedOut.md`, `KubeHpaMaxedOut.md` — stack-default, o.a. coredns), Ingress (`IngressHigh5xx.md`), certs (`CertificateExpiringSoon.md`), storage (`PVCUsageHigh.md`), images (`ImagePullError.md`), **node** (`NodeDiskIOSaturation.md`, `NodeSystemSaturation.md`), **PHP-FPM/PM** (`PhpFpmDown.md`, `PhpFpmMaxChildrenReached.md`, `PhpFpmListenQueueHigh.md`, `PhpFpmNoIdleProcesses.md`)
-- **Changelog & agents**: repo-changelog in `CHANGELOG.md`; afspraken voor meerdere Cursor-agents in `docs/AGENTS.md`.
+- **Changelog & agents**: repo-changelog in `CHANGELOG.md`; het agent-cataloog (operaties, autonomie, gates) in `docs/agents.md`.
 
 ## Waar regels vandaan komen
 - Regels staan in de repo onder `prometheus/rules/` als losstaande `PrometheusRule` CRD's.

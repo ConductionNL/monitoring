@@ -4,6 +4,13 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Verwijderd — 2026-07-14 (één agent-waarheid: legacy Cursor-era agent-bestanden weg)
+- `docs/AGENTS.md` en `.cursor/rules/changelog-and-agents.mdc` verwijderd
+  (git-historie is het archief): beide codificeerden Cursor-tijdperk
+  agent-afspraken naast het echte cataloog `docs/agents.md` —
+  case-collision en twee waarheden. Verwijzing in `docs/index.md`
+  rechtgezet. Conform spec-delta add-component-skills (fase 0).
+
 ### Gewijzigd — 2026-07-14 (runbooks: receiver vs Slack-kanaal ontward)
 - 11 runbooks noemden de routing inconsistent ("team-platform-slack" of
   "#k8s-alerts" door elkaar). Nu overal één regel: Alertmanager-receiver
