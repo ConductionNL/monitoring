@@ -37,6 +37,31 @@ Gecontroleerd: YAML valide en de embedded dashboard-JSON parseert nog
 (host-omzetting in single-line JSON is stil te breken). Nul
 Codeberg-refs over behalve `.pre-commit-config.yaml`, die in een aparte PR
 zit.
+### Toegevoegd — 2026-08-03 (openspec-tooling losgeknipt van de loki-branch)
+
+De openspec-tooling zat opgesloten in `feature/loki-stack-openspec`, in een
+commit `chore: preserve local WIP (openspec editor tooling + dashboard
+tweak)`. Die branch loopt 19 commits achter op `main` en de loki-stack is
+niet uitgerold (0 loki-pods, geen loki-namespace), dus de tooling wachtte op
+werk dat nog niet af is. `main` had er nul bestanden van.
+
+Overgezet: `.github/skills/openspec-{explore,propose,apply-change,archive-change}/SKILL.md`
+en `.github/prompts/opsx-{explore,propose,apply,archive}.prompt.md` —
+8 bestanden, 1250 regels.
+
+**Bewust niet meegenomen — de `.cursor/`-helft.** Die WIP-commit bracht
+dezelfde tooling twee keer: de vier `SKILL.md`'s zijn byte-identiek tussen
+`.cursor/skills/` en `.github/skills/`, en de vier `.cursor/commands/`
+schelen 3 regels frontmatter met hun `.github/prompts/`-tegenhanger. Dat is
+precies het patroon dat op 2026-07-14 is verwijderd onder "één
+agent-waarheid" (zie de entry hieronder): twee waarheden en een
+case-collision. `.github/` is de canonieke plek.
+
+**Ook niet meegenomen — de dashboard-tweak** uit die commit. Die raakt
+`grafana/dashboards/nextcloud-environments.yaml`, dat ook in de
+Codeberg→GitHub-PR zit; één bestand in twee PR's is een conflict in de maak.
+
+De loki-stack blijft op zijn branch; daar wordt apart tijd voor ingepland.
 
 ### Verwijderd — 2026-07-14 (één agent-waarheid: legacy Cursor-era agent-bestanden weg)
 - `docs/AGENTS.md` en `.cursor/rules/changelog-and-agents.mdc` verwijderd
