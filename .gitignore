@@ -1,9 +1,23 @@
 *:Zone.Identifier
 repo-ssh-*.yaml
 .env
+.env.*
+**/.env
+**/.env.*
 grafana/.env
 
 # age-sleutelmateriaal — elk privaat keybestand, ongeacht naam
 *.agekey
 *.key
 key.txt
+
+# Overig privaat keymateriaal. *.crt en public keys mogen wel mee —
+# die zijn publiek van aard; alleen private material blijft eruit.
+*.pem
+*_rsa
+*_ed25519
+*.p12
+*.pfx
+secrets/
+kubeconfig
+kubeconfig.*

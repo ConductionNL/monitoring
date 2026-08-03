@@ -4,6 +4,40 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-03 (Argo-bron en runbook-links naar GitHub)
+
+Echte drift, geverifieerd tegen het cluster: de live app `mon` leest
+`github.com/ConductionNL/monitoring.git` (Synced/Healthy), terwijl git nog
+`codeberg.org` declareerde. Laatste commit op `apps/` was
+`d0c71d7 chore: repoint GitHub -> Codeberg`; de weg terug is live gedaan
+maar nooit in git geland. Wie dit bestand opnieuw applyde, zette monitoring
+terug op Codeberg.
+
+- `apps/app-prom-prod.yaml`: 13× `repoURL` naar
+  `github.com/ConductionNL/monitoring.git`.
+- `alerting/alertmanager-managed-config.yaml` en `stack/values.yaml`: de
+  `runbook_url` in alerts. Let op de vorm — Codeberg gebruikt
+  `/src/branch/main/`, GitHub `/blob/main/`; een platte host-swap had
+  404's opgeleverd op elke alert-runbooklink.
+- `grafana/dashboards/{cluster-overview,node-disk-io,nextcloud-environments}.yaml`:
+  dashboard-links naar de docs, zelfde padvorm-correctie.
+- `scripts/create-argocd-repo-secret.sh`: het usage-voorbeeld maakte een
+  Argo-repo-secret voor de Codeberg-remote — dus credentials voor een
+  bron die niet meer gelezen wordt.
+
+**Let op bij applyen: dit manifest doet méér dan de host corrigeren.** Het
+declareert 14 sources, de live app heeft er 12. Twee staan in git maar niet
+live: `prometheus/rules/nextcloud` en `servicemonitors` (beide met echte
+inhoud, uit `9ca5258` — de Nextcloud PHP-FPM-monitoring). Applyen activeert
+die dus alsnog. Dat is vermoedelijk gewenst, maar het is een functionele
+wijziging bovenop de host-fix, geen bijproduct. `selfHeal` en `prune`
+staan aan op deze app.
+
+Gecontroleerd: YAML valide en de embedded dashboard-JSON parseert nog
+(host-omzetting in single-line JSON is stil te breken). Nul
+Codeberg-refs over behalve `.pre-commit-config.yaml`, die in een aparte PR
+zit.
+
 ### Verwijderd — 2026-07-14 (één agent-waarheid: legacy Cursor-era agent-bestanden weg)
 - `docs/AGENTS.md` en `.cursor/rules/changelog-and-agents.mdc` verwijderd
   (git-historie is het archief): beide codificeerden Cursor-tijdperk
