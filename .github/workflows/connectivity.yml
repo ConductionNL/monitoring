@@ -3,6 +3,8 @@ name: Connectivity Smoke (disabled)
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
