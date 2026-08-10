@@ -54,6 +54,9 @@ spec:
     path: prometheus/rules/nextcloud
   - repoURL: https://github.com/ConductionNL/monitoring.git
     targetRevision: main
+    path: prometheus/rules/argocd
+  - repoURL: https://github.com/ConductionNL/monitoring.git
+    targetRevision: main
     path: grafana/dashboards
   - repoURL: https://github.com/ConductionNL/monitoring.git
     targetRevision: main

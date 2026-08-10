@@ -4,6 +4,44 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Toegevoegd — 2026-08-10 (alerting op Argo CD credential-refresh)
+
+Op 2026-08-10 faalde de CronJob `argocd-credential-refresh` in namespace
+`argocd` doordat het Gardener-service-account-token in
+`gardener-sa-kubeconfig` was verlopen (90-daagse looptijd, handmatige
+rotatie). Dat mechanisme is missiekritisch — valt het stil, dan verliest
+Argo CD binnen 24 uur de toegang tot con-prod, conductionprod en
+test-accept — maar er stond geen enkele alert op. Het is opgemerkt doordat
+iemand toevallig de job-status zag, niet doordat monitoring het meldde.
+`cluster-infra/docs/argocd.md` noemde deze alerting al als opvolgpunt voor
+deze repo.
+
+- `prometheus/rules/argocd/rules-credential-refresh.yaml` (nieuw), twee regels:
+  - `ArgoCDCredentialRefreshStale` (`critical`) — meer dan 14 uur geen
+    succesvolle run (12u-schedule plus marge voor één overslaande run). Dit is
+    de regel die de storing van vandaag zou hebben gemeld ruim voordat de
+    24-uurs-certificaten verliepen.
+  - `ArgoCDCredentialRefreshJobFailed` (`warning`) — een individuele run faalt;
+    het vroege signaal, nog niet acuut.
+- Runbooks `docs/rules/ArgoCDCredentialRefreshStale.md` en
+  `docs/rules/ArgoCDCredentialRefreshJobFailed.md`, en een regel in
+  `docs/index.md`.
+- `apps/app-prom-prod.yaml`: bron voor `prometheus/rules/argocd` toegevoegd.
+  De Application somt de rule-mappen **per pad** op in plaats van
+  `prometheus/rules` te recursen, dus een nieuwe map wordt zonder deze regel
+  nooit gesynct — de regels zouden stil in git blijven liggen. Let hierop bij
+  elke volgende rule-map.
+
+Metrieknamen en labels zijn tegen de live kube-state-metrics (v2.17.0,
+`mon-kube-state-metrics`) gecontroleerd, niet aangenomen:
+`kube_cronjob_status_last_successful_time{namespace,cronjob}` en
+`kube_job_failed{namespace,job_name,condition}` bestaan daar met exact deze
+labels, en zowel `jobs` als `cronjobs` staan in de `--resources`-lijst zonder
+metric-allowlist.
+
+Bekende blinde vlek, vastgelegd in het runbook: wordt de CronJob verwijderd of
+gesuspendeerd, dan verdwijnt de metric en zwijgt de stale-alert.
+
 ### Toegevoegd — 2026-08-10 (docs-touched-gate, techbook-pin op v0.2.0)
 
 De hookset kende geen gate op §7 van de conventies: documentatie wijzigt
