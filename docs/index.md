@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-14
+last_reviewed: 2026-08-10
 owner: info@conduction.nl
 ---
 
@@ -20,11 +20,32 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 - **CoreDNS (extended)**: `rules/CoreDNSExtended.md`
 - **Pods**: `rules/CreateContainerConfigError.md`, `rules/PodPendingLong.md`
 - **Overige**: HPA (`HPAMaxedOut.md`, `KubeHpaMaxedOut.md` — stack-default, o.a. coredns), Ingress (`IngressHigh5xx.md`), certs (`CertificateExpiringSoon.md`), storage (`PVCUsageHigh.md`), images (`ImagePullError.md`), **node** (`NodeDiskIOSaturation.md`, `NodeSystemSaturation.md`), **PHP-FPM/PM** (`PhpFpmDown.md`, `PhpFpmMaxChildrenReached.md`, `PhpFpmListenQueueHigh.md`, `PhpFpmNoIdleProcesses.md`)
+- **Logs (Loki)**: `rules/HydraPipelineFailure.md` — de enige alert die op logregels vuurt in plaats van op metrics.
 - **Changelog & agents**: repo-changelog in `CHANGELOG.md`; het agent-cataloog (operaties, autonomie, gates) in `docs/agents.md`.
 
 ## Waar regels vandaan komen
 - Regels staan in de repo onder `prometheus/rules/` als losstaande `PrometheusRule` CRD's.
 - Ze worden opgepakt door Prometheus via `ruleSelector.matchLabels.release: mon`.
+- **Uitzondering — logs:** de regels onder `loki/alerts/` zijn géén
+  `PrometheusRule` maar Grafana Unified Alerting-regels, geleverd als
+  ConfigMap met label `grafana_alert: "1"`. Prometheus ziet ze niet;
+  Grafana evalueert ze tegen de Loki-datasource. `scripts/verify.sh`
+  controleert beide vormen en eist voor allebei een runbook.
+
+## Logverzameling (Loki + Alloy)
+- **Loki** slaat logs op; **Alloy** draait als DaemonSet en stuurt de podlogs
+  van elke node naar Loki. Beide worden uitgerold door de Argo CD-Application
+  `apps/app-loki-prod.yaml` in namespace `monitoring`.
+- **Wat er verzameld wordt:** alle podlogs, met labels `namespace`, `pod`,
+  `container` en `node`. De namespace `kube-system` is uitgesloten. De
+  exclusielijst staat in `loki/alloy-config.yaml`.
+- **Hoe lang:** `retention_period: 168h` (7 dagen), in `loki/values.yaml`.
+  Langer bewaren betekent meer S3-opslag; korter betekent dat een incident
+  van vorige week niet meer te reconstrueren is.
+- **Opslag:** S3-compatible bucket `loki-chunks`; de credentials staan als
+  SOPS-secret in `loki/secret-loki-s3.sops.yaml` (custody: `docs/alerting.md`).
+- **Bevragen:** Grafana → Explore → datasource `Loki`, bijvoorbeeld
+  `{namespace="monitoring"} |= "ERROR"`.
 
 ## Routing van alerts
 - Alertmanager configuratie (routes/receivers): inline in `stack/values.yaml`

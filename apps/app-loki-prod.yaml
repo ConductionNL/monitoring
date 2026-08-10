@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  sources:
+  # 1. Loki Helm chart met values uit Git
+  - repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 6.29.0
+    helm:
+      releaseName: loki
+      valueFiles:
+      - $values/loki/values.yaml
+  # 2. Alloy Helm chart met values uit Git
+  - repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 0.12.0
+    helm:
+      releaseName: alloy
+      valueFiles:
+      - $values/loki/alloy-values.yaml
+  # 3. Git ref voor Helm values
+  - repoURL: https://github.com/ConductionNL/monitoring.git
+    targetRevision: main
+    ref: values
+  # 4. Plain manifests uit loki/: datasource, Alloy-config, alertregels en
+  #    de SOPS-secret. De twee values-bestanden horen bij bron 1 en 2 en
+  #    zijn hier uitgesloten; de SOPS-secret staat er bewust wél in, net
+  #    zoals alerting/secret-alertmanager.sops.yaml in app-prom-prod.yaml
+  #    (argocd-repo-server ontsleutelt, zie docs/alerting.md).
+  - repoURL: https://github.com/ConductionNL/monitoring.git
+    targetRevision: main
+    path: loki
+    directory:
+      recurse: true
+      exclude: '{values.yaml,alloy-values.yaml}'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ApplyOutOfSyncOnly=true
+    - ServerSideApply=true
