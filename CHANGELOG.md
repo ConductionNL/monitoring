@@ -68,37 +68,53 @@ verschil is wel groot en vraagt een aparte, geteste stap: `loki` 6.29.0
 (appVersion 3.4.2, maart 2025) tegenover 7.2.0 nu, en `alloy` 0.12.0
 (appVersion v1.7.0, feb 2025) tegenover 1.11.1 nu.
 
-**Vóór de merge door een mens te controleren:**
+**Vier van de zes blokkades zijn opgelost; twee bleven liggen.**
+
+Opgelost in deze wijziging:
+
+1. **De chart rendeerde helemaal niet.** `loki/values.yaml` gebruikte het
+   schema van Loki's eigen config (`storage.s3.bucketnames`,
+   `access_key_id`) in plaats van dat van de chart
+   (`storage.bucketNames.chunks`, `accessKeyId`). `helm template` viel om
+   op `nil pointer evaluating interface {}.chunks`; de Application zou dus
+   nooit gesynct hebben. Omgezet naar het chart-schema.
+2. **SingleBinary botste met zijn eigen validatie.** De chart-defaults
+   zetten `read`, `write` en `backend` op replicas > 0; samen met
+   `singleBinary.replicas: 1` faalt de render op "more than zero replicas
+   configured for both targets". Alle drie expliciet op 0.
+3. **Env-vars expandeerden niet.** `global.extraArgs: ["-config.expand-env=true"]`
+   toegevoegd — de chart noemt die vlag zelf als voorbeeld. Zonder dit
+   komt de letterlijke tekst `${S3_ENDPOINT}` in de config terecht.
+4. **De alerts-sidecar en de datasource-uid.**
+   `grafana.sidecar.alerts.enabled: true` in `stack/values.yaml` (label
+   `grafana_alert`, matcht wat `loki/alerts/*.yaml` zet), en `uid: loki`
+   op de datasource zodat `datasourceUid: loki` in de alertregel niet
+   doodloopt.
+
+Beide charts renderen nu: `loki` 25 resources, `alloy` 6.
+
+**Blijft staan, vóór de merge:**
 
 1. **De S3-secret is niet te ontsleutelen.** `loki/secret-loki-s3.sops.yaml`
    is versleuteld naar `age1l2k98…dyehmy`, een recipient van vóór de
-   WP4-sleutelwissel die niet in `.sops.yaml` staat en die
-   `argocd-repo-server` niet heeft. Opnieuw zaaien, niet `updatekeys`.
-   Het bestand is hier ongewijzigd gekopieerd en nooit ontsleuteld.
-   `.sops.yaml` is bewust niet aangepast: een `loki/`-creation-rule
-   toevoegen zou suggereren dat de inhoud klopt.
-2. **De Grafana-alerts-sidecar staat uit.** `stack/values.yaml` zet onder
-   `grafana.sidecar` alleen `datasources` en `dashboards` aan, niet
-   `alerts`. Zonder `grafana.sidecar.alerts.enabled: true` wordt de
-   ConfigMap `grafana-alerting-loki-rules` door niets opgepakt en bestaat
-   de alert alleen op papier. Niet aangeraakt: dat raakt de draaiende
-   Prometheus-stack en is per `docs/agents.md` mensenwerk.
-3. **De datasource heeft geen vaste `uid`.** De alertregel verwijst naar
-   `datasourceUid: loki`, maar `loki/datasource-loki.yaml` legt geen `uid`
-   vast, dus Grafana genereert er een. De verwijzing loopt dan dood.
-4. **De alert vuurt op iets dat niet draait.** `HydraPipelineFailure`
-   query't `{namespace=~"hydra.*"}`. Er is geen `hydra`-namespace in
-   `cluster-config`/`cluster-infra` en geen Argo-Application die de
-   Hydra-pipeline uitrolt; die leeft in een eigen repo en draait haar CI
-   nog op `ubuntu-latest`. De alert blijft dus in `noDataState: OK`
-   staan. Niets verwijderd — de regel is onschadelijk en klopt zodra
-   Hydra er wél is, maar wie hem nu niet wil, haalt
-   `loki/alerts/hydra-pipeline-failures.yaml` en het runbook weg.
-5. **Env-vars in Helm-values worden niet geëxpandeerd.**
-   `loki/values.yaml` zet `${S3_ENDPOINT}`, `${S3_REGION}` en de
-   AWS-sleutels als placeholders in `loki.storage.s3`. Helm vult die niet
-   in; Loki doet dat alleen met `-config.expand-env=true`, en die vlag
-   staat nergens.
+   WP4-sleutelwissel die niemand nog als private sleutel heeft.
+   `sops updatekeys` kan dat niet repareren — opnieuw zaaien is de enige
+   weg. Het bestand is hier ongewijzigd gekopieerd en nooit ontsleuteld.
+   `.sops.yaml` heeft nu wél een creation-rule voor `loki/secret-*.sops.yaml`
+   naar de twee actuele recipients, zodat dat zaaien één commando is.
+   De secret moet `S3_ENDPOINT`, `S3_REGION`, `AWS_ACCESS_KEY_ID` en
+   `AWS_SECRET_ACCESS_KEY` bevatten, en `loki-chunks` moet als bucket
+   bestaan.
+2. **De alert vuurt op iets dat niet draait.** `HydraPipelineFailure`
+   query't `{namespace=~"hydra.*"}`. Er is geen `hydra`-namespace en geen
+   Argo-Application die die pipeline uitrolt, dus de alert blijft in
+   `noDataState: OK`. Onschadelijk, en klopt zodra Hydra er wél is; wie
+   hem nu niet wil, haalt de regel en het runbook weg.
+
+**Waarom dit niet eerder opviel:** `scripts/verify.sh` rendert geen charts.
+De doc-asserties en de alertstructuurcheck draaien wel, maar een values-bestand
+dat de chart laat omvallen passeert ongezien. Een render-check in de gate zou
+blokkades 1 tot en met 3 hebben gevangen.
 
 ### Toegevoegd — 2026-08-10 (docs-touched-gate, techbook-pin op v0.2.0)
 

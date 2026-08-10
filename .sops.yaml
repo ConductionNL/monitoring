@@ -9,3 +9,11 @@ creation_rules:
   - path_regex: ^alerting/secret-.*\.sops\.yaml$
     encrypted_regex: '^(data|stringData)$'
     age: age1wr3tvh8j52xrfmyjwuxk2hrcxmggqz72evjh3m25d4s6sgm0z9lqc8nd33,age13zmwxwgtn86w8fhs28cx90nyp2r8hq9a78p6ufrcer75e9u9j5pszfndpx
+  # Zelfde twee recipients. Het bestaande loki/secret-loki-s3.sops.yaml is
+  # versleuteld naar een recipient uit april die hier niet meer staat en
+  # waarvan niemand de private sleutel nog heeft — `sops updatekeys` kan dat
+  # dus niet repareren, het moet opnieuw gezaaid worden. Deze regel bestaat
+  # zodat dat één commando is en niet eerst een configwijziging.
+  - path_regex: ^loki/secret-.*\.sops\.yaml$
+    encrypted_regex: '^(data|stringData)$'
+    age: age1wr3tvh8j52xrfmyjwuxk2hrcxmggqz72evjh3m25d4s6sgm0z9lqc8nd33,age13zmwxwgtn86w8fhs28cx90nyp2r8hq9a78p6ufrcer75e9u9j5pszfndpx

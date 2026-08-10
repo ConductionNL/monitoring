@@ -10,6 +10,10 @@ data:
     apiVersion: 1
     datasources:
       - name: Loki
+        # Vaste uid: de alertregels verwijzen ernaar met `datasourceUid: loki`.
+        # Zonder dit genereert Grafana een willekeurige uid en loopt die
+        # verwijzing dood — de alert laadt dan wel, maar vraagt niets op.
+        uid: loki
         type: loki
         access: proxy
         url: http://loki.monitoring.svc.cluster.local:3100

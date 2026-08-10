@@ -139,6 +139,14 @@ grafana:
       enabled: true
       label: grafana_dashboard
       labelValue: "1"
+    # Zonder deze sidecar pikt niets de alert-ConfigMaps op en laden de
+    # Loki-logalerts nooit — ze staan dan wel in Git en nergens in Grafana.
+    # Label `grafana_alert` is de chart-default en matcht wat
+    # loki/alerts/*.yaml zet; searchNamespace leeg = de eigen namespace.
+    alerts:
+      enabled: true
+      label: grafana_alert
+      labelValue: "1"
 
   persistence:
     enabled: false
