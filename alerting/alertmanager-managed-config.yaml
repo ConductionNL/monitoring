@@ -36,7 +36,7 @@ stringData:
       slack_configs:
       - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-webhook/slack_webhook
         title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
-        title_link: 'https://codeberg.org/Conduction/monitoring/src/branch/main/docs/rules/{{ .CommonLabels.alertname }}.md'
+        title_link: 'https://github.com/ConductionNL/monitoring/blob/main/docs/rules/{{ .CommonLabels.alertname }}.md'
         text: '{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}'
         fields:
         - title: Namespace

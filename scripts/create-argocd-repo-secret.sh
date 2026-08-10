@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Usage:
 #   export SSH_PRIVATE_KEY="$(cat id_ed25519)"
-#   ./scripts/create-argocd-repo-secret.sh https://codeberg.org/Conduction/monitoring.git repo-ssh-conduction-monitoring
+#   ./scripts/create-argocd-repo-secret.sh https://github.com/ConductionNL/monitoring.git repo-ssh-conduction-monitoring
 
 REPO_URL=${1:-}
 SECRET_NAME=${2:-repo-ssh-conduction-monitoring}

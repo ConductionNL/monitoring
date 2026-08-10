@@ -96,7 +96,7 @@ alertmanager:
   templateFiles:
     slack.tmpl: |
       {{ define "slack.mon.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
-      {{ define "slack.mon.titlelink" }}https://codeberg.org/Conduction/monitoring/src/branch/main/docs/rules/{{ .CommonLabels.alertname }}.md{{ end }}
+      {{ define "slack.mon.titlelink" }}https://github.com/ConductionNL/monitoring/blob/main/docs/rules/{{ .CommonLabels.alertname }}.md{{ end }}
       {{ define "slack.mon.text" }}{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}Alert {{ .CommonLabels.alertname }} fired.{{ end }}{{ if .CommonAnnotations.description }}\n{{ .CommonAnnotations.description }}{{ end }}{{ end }}
       {{ define "slack.mon.footer" }}severity={{ .CommonLabels.severity | default "-" }} • receiver={{ .Receiver }}{{ end }}
 grafana:
