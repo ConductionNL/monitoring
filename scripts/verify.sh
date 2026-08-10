@@ -10,6 +10,12 @@
 # beschikbaar is, worden de regels daar ook doorheen gehaald
 # (.spec-extractie via yq); zo niet, dan meldt de output die beperking.
 #
+# Sinds 2026-08-10 wordt óók loki/alerts/ gescand. Die alerts zijn geen
+# PrometheusRule maar Grafana Unified Alerting-regels in een ConfigMap;
+# ze krijgen daarom hun eigen structuurcheck, maar vallen onder dezelfde
+# runbook-dekkingseis. Zonder deze uitbreiding zou een log-alert stil
+# zonder runbook kunnen landen.
+#
 # Writes: read-only
 # Idempotent: yes
 # Requires: python3; optioneel: promtool + yq (mikefarah)
@@ -50,6 +56,48 @@ for f in sorted(pathlib.Path("prometheus/rules").rglob("*.yaml")):
                     alerts.append((f, r["alert"]))
                     if not r.get("expr"):
                         errors.append(f"{f}: alert {r['alert']} zonder expr")
+
+# Loki-log-alerts: Grafana Unified Alerting-regels, geleverd als ConfigMap
+# met een geprovisioneerd YAML-document in .data. Andere vorm dan een
+# PrometheusRule, dus een eigen structuurcheck — maar wel dezelfde
+# runbook-eis, want tijdens een incident maakt de herkomst niet uit.
+for f in sorted(pathlib.Path("loki/alerts").rglob("*.yaml")):
+    try:
+        docs = list(yaml.safe_load_all(f.read_text()))
+    except yaml.YAMLError as e:
+        errors.append(f"{f}: YAML-fout: {e}")
+        continue
+    for doc in docs:
+        if not doc:
+            continue
+        if doc.get("kind") != "ConfigMap":
+            errors.append(f"{f}: kind is {doc.get('kind')!r}, "
+                          "verwacht ConfigMap (Grafana-provisioning)")
+            continue
+        labels = (doc.get("metadata") or {}).get("labels") or {}
+        if labels.get("grafana_alert") != "1":
+            errors.append(f"{f}: mist label grafana_alert: \"1\" "
+                          "(de Grafana-sidecar pakt deze regels niet op)")
+        for key, raw in (doc.get("data") or {}).items():
+            try:
+                inner = yaml.safe_load(raw)
+            except yaml.YAMLError as e:
+                errors.append(f"{f}: data.{key}: YAML-fout: {e}")
+                continue
+            groups = (inner or {}).get("groups") or []
+            if not groups:
+                errors.append(f"{f}: data.{key}: geen groups")
+            for g in groups:
+                for r in g.get("rules") or []:
+                    title = r.get("title")
+                    if not title:
+                        errors.append(f"{f}: data.{key}: regel zonder title")
+                        continue
+                    alerts.append((f, title))
+                    exprs = [q.get("model", {}).get("expr")
+                             for q in r.get("data") or []]
+                    if not any(exprs):
+                        errors.append(f"{f}: alert {title} zonder expr")
 
 # Doc-assertion (docs-claims): docs/index.md belooft dat elke regel het
 # label release: mon draagt (ruleSelector) — anders is hij dode config.

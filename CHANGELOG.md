@@ -4,6 +4,101 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Toegevoegd — 2026-08-10 (Loki + Alloy logstack, geport van een oude branch)
+
+Loki draait **niet** in het cluster: er is geen Argo CD-Application `loki`
+en geen bijbehorende workload. Dit is dus geen wijziging aan iets
+bestaands maar een **nieuwe uitrol**, die pas gebeurt op het moment dat
+deze PR merget — Argo pakt `apps/app-loki-prod.yaml` dan op en maakt Loki,
+Alloy, de datasource en de alertregels aan in namespace `monitoring`.
+
+Inhoud geport uit `feature/loki-stack-openspec` (3 juni, één WIP-commit).
+Die branch is niet gemerged maar overgezet: hij mist alles wat main sinds
+juni kreeg en sleepte tooling mee die hier niet hoort.
+
+- `apps/app-loki-prod.yaml` (nieuw): Argo CD-Application met vier sources
+  — de Helm-charts `loki` en `alloy`, een `ref: values` en de plain
+  manifests uit `loki/`.
+- `loki/values.yaml`, `loki/alloy-values.yaml`, `loki/alloy-config.yaml`,
+  `loki/datasource-loki.yaml`, `loki/alerts/hydra-pipeline-failures.yaml`,
+  `loki/secret-loki-s3.sops.yaml` (nieuw).
+- `docs/rules/HydraPipelineFailure.md` (nieuw): herschreven naar de
+  huisstijl van deze repo (Bron / Betekenis / Trigger / Runbook /
+  Verwachte routing / Test) met front-matter. De branchversie was Engels,
+  zonder front-matter, en beweerde routing naar `team-platform-slack` die
+  niet bestaat.
+- `openspec/changes/loki-stack/**` (nieuw): proposal, design, tasks,
+  README en vijf spec-delta's, ongewijzigd overgenomen.
+- `scripts/verify.sh`: scant nu ook `loki/alerts/`. Die alerts zijn geen
+  `PrometheusRule` maar Grafana Unified Alerting-regels in een ConfigMap,
+  dus ze krijgen een eigen structuurcheck (kind, label `grafana_alert`,
+  title, expr) maar vallen onder dezelfde runbook-dekkingseis. Zonder
+  deze uitbreiding was de dekking stil onvolledig: een log-alert zonder
+  runbook was er ongemerkt doorheen gekomen. Negatief getest.
+- `.docs-touched.yaml`: regel `log-collectie` op `loki/**`, met
+  `loki/alerts/**` uitgezonderd (verify dekt dat al, over de hele boom in
+  plaats van de diff) en `**/*.sops.yaml` uitgezonderd (zelfde afweging
+  als bij `alertmanager-routing`). Reden: `alloy-config.yaml` bepaalt
+  welke logs bestaan en `values.yaml` hoe lang, en dat merk je pas als je
+  ze tijdens een incident mist.
+- `docs/index.md`, `docs/alerting.md`: sectie logverzameling (wat wordt
+  verzameld, retentie, opslag, bevragen) en de vastlegging dat
+  Grafana-log-alerts níét via Alertmanager lopen.
+
+**Bewust niet overgenomen:** `.claude/**` en `.cursor/**` (opsx-tooling;
+main heeft dit onder `.github/`), `docs/AGENTS.md` (main heeft bewust één
+agent-waarheid, `docs/agents.md`), en `alerting/alertmanager.yaml`. Dat
+laatste bevat géén Loki-route — het is de legacy
+`configMapOverrideName`-ConfigMap die main op 2026-07-10 juist heeft
+opgeruimd, en de routing staat inmiddels inline in `stack/values.yaml`.
+Terugzetten zou een opgeruimd bestand laten herleven zonder dat het iets
+voor Loki doet. Er is dus geen Alertmanager-wijziging nodig: log-alerts
+lopen via Grafana.
+
+**Aangepast t.o.v. de branch:** de `repoURL`'s in de Application stonden
+op `git@github.com:` (SSH); main gebruikt overal `https://github.com/…`
+zoals in `apps/app-prom-prod.yaml`. Verder is de uitsluiting van
+`secret-*.sops.yaml` uit de manifest-source geschrapt: dan zou de secret
+nooit worden aangemaakt terwijl `loki/values.yaml` er via `extraEnvFrom`
+op leunt. `alerting/` doet dit in `app-prom-prod.yaml` op dezelfde manier.
+
+**Chartversies bewust niet gebumpt.** Beide pins bestaan nog upstream en
+zijn niet deprecated, dus conform de afspraak blijven ze staan; het
+verschil is wel groot en vraagt een aparte, geteste stap: `loki` 6.29.0
+(appVersion 3.4.2, maart 2025) tegenover 7.2.0 nu, en `alloy` 0.12.0
+(appVersion v1.7.0, feb 2025) tegenover 1.11.1 nu.
+
+**Vóór de merge door een mens te controleren:**
+
+1. **De S3-secret is niet te ontsleutelen.** `loki/secret-loki-s3.sops.yaml`
+   is versleuteld naar `age1l2k98…dyehmy`, een recipient van vóór de
+   WP4-sleutelwissel die niet in `.sops.yaml` staat en die
+   `argocd-repo-server` niet heeft. Opnieuw zaaien, niet `updatekeys`.
+   Het bestand is hier ongewijzigd gekopieerd en nooit ontsleuteld.
+   `.sops.yaml` is bewust niet aangepast: een `loki/`-creation-rule
+   toevoegen zou suggereren dat de inhoud klopt.
+2. **De Grafana-alerts-sidecar staat uit.** `stack/values.yaml` zet onder
+   `grafana.sidecar` alleen `datasources` en `dashboards` aan, niet
+   `alerts`. Zonder `grafana.sidecar.alerts.enabled: true` wordt de
+   ConfigMap `grafana-alerting-loki-rules` door niets opgepakt en bestaat
+   de alert alleen op papier. Niet aangeraakt: dat raakt de draaiende
+   Prometheus-stack en is per `docs/agents.md` mensenwerk.
+3. **De datasource heeft geen vaste `uid`.** De alertregel verwijst naar
+   `datasourceUid: loki`, maar `loki/datasource-loki.yaml` legt geen `uid`
+   vast, dus Grafana genereert er een. De verwijzing loopt dan dood.
+4. **De alert vuurt op iets dat niet draait.** `HydraPipelineFailure`
+   query't `{namespace=~"hydra.*"}`. Er is geen `hydra`-namespace in
+   `cluster-config`/`cluster-infra` en geen Argo-Application die de
+   Hydra-pipeline uitrolt; die leeft in een eigen repo en draait haar CI
+   nog op `ubuntu-latest`. De alert blijft dus in `noDataState: OK`
+   staan. Niets verwijderd — de regel is onschadelijk en klopt zodra
+   Hydra er wél is, maar wie hem nu niet wil, haalt
+   `loki/alerts/hydra-pipeline-failures.yaml` en het runbook weg.
+5. **Env-vars in Helm-values worden niet geëxpandeerd.**
+   `loki/values.yaml` zet `${S3_ENDPOINT}`, `${S3_REGION}` en de
+   AWS-sleutels als placeholders in `loki.storage.s3`. Helm vult die niet
+   in; Loki doet dat alleen met `-config.expand-env=true`, en die vlag
+   staat nergens.
 ### Toegevoegd — 2026-08-10 (alerting op Argo CD credential-refresh)
 
 Op 2026-08-10 faalde de CronJob `argocd-credential-refresh` in namespace

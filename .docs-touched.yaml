@@ -54,6 +54,26 @@ rules:
       - "servicemonitors/**"
       - "grafana/dashboards/**"
 
+  - name: log-collectie
+    reason: >-
+      loki/alloy-config.yaml bepaalt welke logs überhaupt bestaan
+      (namespace-exclusies, labels) en loki/values.yaml hoe lang je ze
+      terug kunt zien (retention_period). Beide zijn onzichtbaar tot je
+      ze tijdens een incident nodig hebt: een stilletjes uitgesloten
+      namespace of een verkorte retentie levert een lege Explore-query
+      en geen enkele foutmelding. docs/index.md is de enige plek die
+      beschrijft wat er verzameld wordt en hoe lang het blijft.
+    paths:
+      - "loki/**"
+    exclude:
+      # loki/alerts/ valt onder de runbook-dekking in scripts/verify.sh,
+      # die over de héle boom draait in plaats van over de diff — zelfde
+      # afweging als bij prometheus/rules/** hierboven.
+      - "loki/alerts/**"
+      # Een hersleutelde S3-credential verandert geen te documenteren
+      # gedrag; zelfde uitzondering als bij alertmanager-routing.
+      - "**/*.sops.yaml"
+
   - name: ops-scripts
     reason: >-
       De scripts in scripts/ voeren mens-vereiste handelingen uit tegen

@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-13
+last_reviewed: 2026-08-10
 owner: info@conduction.nl
 ---
 
@@ -25,6 +25,20 @@ owner: info@conduction.nl
   heeft inmiddels wél beide recipients, zodat een bootstrap direct naar
   twee sleutels versleutelt.
 
+## Log-alerts lopen níét via Alertmanager (2026-08-10)
+
+De alerts onder `loki/alerts/` zijn Grafana Unified Alerting-regels, geen
+`PrometheusRule`. Ze worden door Grafana geëvalueerd tegen de
+Loki-datasource en gaan **niet** door de routes en receivers hierboven.
+Een matcher toevoegen aan `alertmanager.config` doet voor deze alerts dus
+niets.
+
+Waar ze wél uitkomen, bepaalt een Grafana **contact point**. Dat is nog
+niet ingericht: `notification_settings` staat uitgecommentarieerd in
+`loki/alerts/hydra-pipeline-failures.yaml`. Tot dat gebeurt is
+`HydraPipelineFailure` alleen zichtbaar in de Grafana-alertlijst en stuurt
+hij geen Slack-bericht. Zie `docs/rules/HydraPipelineFailure.md`.
+
 ## Key-custody (review WP4, 2026-07-13)
 
 Twee age-recipients in `.sops.yaml`; alles wordt naar beide versleuteld,
@@ -41,6 +55,18 @@ toevoegen aan `.sops.yaml`, `sops updatekeys` per bestand, oude
 recipient verwijderen, nogmaals `updatekeys` — plaintext hoeft er nooit
 opnieuw in. Uitgebreider rotatiepad: talos
 `manifests/components/runner-secrets/README.md`.
+
+> **Openstaand (2026-08-10): `loki/secret-loki-s3.sops.yaml` is niet te
+> ontsleutelen.** Dat bestand is op 2026-04-03 versleuteld naar één
+> recipient, `age1l2k98…dyehmy`, en die staat níét in `.sops.yaml` en
+> niet in de tabel hierboven — hij dateert van vóór de WP4-sleutelwissel.
+> `argocd-repo-server` heeft alleen de primaire key en kan er dus niets
+> mee. De S3-credentials moeten opnieuw gezaaid worden (plaintext
+> opnieuw invoeren, versleutelen naar beide recipients hierboven);
+> `sops updatekeys` volstaat niet, want niemand heeft de oude private
+> key nog. Dit is mensenwerk en moet vóór de Loki-uitrol gebeuren.
+
+
 
 ## Repo-server (Argo CD) voorbereiden
 - Zorg dat `argocd-repo-server` kan decrypten met SOPS/age:

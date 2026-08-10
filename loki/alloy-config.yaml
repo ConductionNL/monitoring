@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  namespace: monitoring
+data:
+  config.alloy: |
+    // Alloy pipeline: Kubernetes pod log discovery → Loki push
+    //
+    // Labels toegevoegd: namespace, pod, container, node
+    // Namespace-exclusies: kube-system (configureerbaar hieronder)
+
+    // -- Discovery: alle pods in het cluster
+    discovery.kubernetes "pods" {
+      role = "pod"
+    }
+
+    // -- Relabel: namespace, pod, container, node labels toevoegen
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+
+      // Namespace-exclusielijst — voeg hier namespaces toe om te negeren
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex         = "kube-system"
+        action        = "drop"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label  = "node"
+      }
+
+      // Log-pad op de node afleiden
+      rule {
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        target_label  = "__path__"
+        separator     = "/"
+        replacement   = "/var/log/pods/*$1/$2/*.log"
+      }
+    }
+
+    // -- Lezen van logbestanden op de node
+    loki.source.file "pod_logs" {
+      targets    = discovery.relabel.pod_logs.output
+      forward_to = [loki.write.default.receiver]
+    }
+
+    // -- Schrijf naar Loki push endpoint (in-cluster)
+    loki.write "default" {
+      endpoint {
+        url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+      }
+    }
