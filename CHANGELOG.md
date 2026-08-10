@@ -4,6 +4,40 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Toegevoegd — 2026-08-10 (docs-touched-gate, techbook-pin op v0.2.0)
+
+De hookset kende geen gate op §7 van de conventies: documentatie wijzigt
+in dezelfde PR als de code die zij beschrijft. `docs-contract` en
+`docs-claims` kijken naar de hele boom en nooit naar wat je pusht.
+`docs-touched` is de diff-gate die dat wél ziet.
+
+- `.pre-commit-config.yaml`: techbook-pin van `edf269ee…` naar `v0.2.0`
+  en `- id: docs-touched` toegevoegd. Die twee horen in één wijziging:
+  de hook bestáát niet in `edf269ee…`, dus los toevoegen faalt, en een
+  pin op een niet-bestaande rev laat pre-commit al bij het uitchecken
+  van de techbook-repo stuklopen — dat zou óók `docs-contract`,
+  `docs-claims` en `verify` meenemen. Meteen de eerste tag in plaats van
+  een kale sha; daar stappen we vanaf.
+- `.docs-touched.yaml` (nieuw): drie regels — `stack/**` + `alerting/**`
+  (routing en receivers staan inline in `stack/values.yaml`; alleen
+  `docs/alerting.md` beschrijft waar een alert uitkomt),
+  `servicemonitors/**` + `grafana/dashboards/**` (de keten van exporter
+  tot paneel uit `docs/phpfpm-metrics.md`), en `scripts/**` (ops-scripts
+  zonder scripts-assertie). `**/*.sops.yaml` is uitgezonderd: een
+  geroteerde webhook verandert geen te documenteren gedrag.
+- **`prometheus/rules/**` staat er bewust níét in.** `scripts/verify.sh`
+  eist al per alert een runbook in `docs/rules/`, over de hele boom in
+  plaats van alleen de diff. Die assertie is strenger dan een diff-gate;
+  hem hier herhalen levert twee meldingen voor één fout en geen extra
+  dekking.
+- `docs/agents.md`: sectie Gates met de verwijzing; `last_reviewed` bij.
+
+De gate staat op **`mode: warn`** — hij rapporteert volledig en geeft
+exit 0. Eerst een periode meekijken of de padregels op deze repo geen
+ruis opleveren; pas daarna naar `enforce`. Een gate die eeuwig alleen
+waarschuwt wordt genegeerd, dus de omzetting hoort na een rustige maand
+te gebeuren en niet later.
+
 ### Gewijzigd — 2026-08-03 (Argo-bron en runbook-links naar GitHub)
 
 Echte drift, geverifieerd tegen het cluster: de live app `mon` leest

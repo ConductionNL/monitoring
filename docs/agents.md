@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-07-08
+last_reviewed: 2026-08-10
 owner: info@conduction.nl
 ---
 
@@ -20,6 +20,19 @@ Guardrails voor agents in deze repo, per het handboek-formaat
 | `kubectl`/Helm/Argo-mutaties; connectivity-tests draaien | mens-vereist | — | agent levert commando + verwachte uitkomst |
 | Push | mens-vereist | — | gates draaien bij de mens |
 | Alert verwijderen zonder het runbook te archiveren; `age.agekey` of andere secrets committen | verboden | — | .gitignore + gitleaks zijn het vangnet, niet de vrijbrief |
+
+## Gates
+
+Naast `docs-contract`, `docs-claims` en de runbook-dekking in verify
+draait sinds 2026-08-10 de diff-gate `docs-touched`: raakt een push
+`stack/`, `alerting/`, `servicemonitors/`, `grafana/dashboards/` of
+`scripts/`, dan hoort er documentatie mee te wijzigen. `prometheus/rules/`
+staat er bewust níét in — de runbook-dekking in verify bewaakt dat al,
+over de hele boom in plaats van alleen de diff. De padregels met hun
+reden staan in `.docs-touched.yaml` in de repo-root; de gate staat op
+`mode: warn` en blokkeert dus nog niet. Configformaat, vrijstelling
+(`Docs-not-needed`-trailer) en verificatie: techbook
+`docs/docs-touched.md`.
 
 ## Grondwaarheid en gedrag
 
