@@ -4,6 +4,19 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### 2026-08-03 — pre-commit-hookbron naar GitHub
+- `.pre-commit-config.yaml`: de techbook-hook komt van
+  `github.com/ConductionNL/techbook` in plaats van `codeberg.org`. De pin
+  `edf269ee…` blijft ongewijzigd: die commit bestaat op beide forges en is
+  daar voorouder van `main`. Host-only dus — de gates (`docs-contract`,
+  `docs-claims`) gedragen zich identiek.
+- Waarom: dit was de laatste harde Codeberg-afhankelijkheid buiten talos.
+  Zolang die bestond moest `techbook` naar twee forges gepusht blijven
+  worden, en dat is niet volgehouden — 7 van de 9 repos zijn daar uit
+  elkaar gelopen. De bron van het patroon zat in
+  `techbook/scripts/rollout_precommit_hook.sh`, dat deze URL in élke repo
+  schreef; die is in dezelfde ronde omgezet.
+
 ### Verwijderd — 2026-07-14 (één agent-waarheid: legacy Cursor-era agent-bestanden weg)
 - `docs/AGENTS.md` en `.cursor/rules/changelog-and-agents.mdc` verwijderd
   (git-historie is het archief): beide codificeerden Cursor-tijdperk
