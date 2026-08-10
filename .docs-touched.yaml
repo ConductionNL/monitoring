@@ -1,0 +1,77 @@
+# Docs-as-code gate (techbook docs/conventies.md §7).
+# Formaat, vrijstelling en verificatierecept: techbook docs/docs-touched.md.
+#
+# Dit bestand staat bewust in de repo-root en niet in args: van
+# .pre-commit-config.yaml — dat bestand wordt bij een uitrol in zijn
+# geheel herschreven, dus padlijsten daarin sneuvelen.
+version: 1
+
+# Eerst meekijken, niet blokkeren. Naar `enforce` zodra de gate een
+# maand rustig meedraait op deze repo.
+mode: warn
+
+# Let op: "README.md" matcht op elk niveau (gitignore-semantiek), dus
+# stack/README.md, prometheus/README.md en grafana/README.md tellen mee
+# als documentatie. Dat is hier bedoeld — dát zijn de pagina's die die
+# mappen beschrijven.
+docs:
+  - "docs/**"
+  - "README.md"
+
+# BEWUST NIET geregeld: prometheus/rules/**.
+# scripts/verify.sh eist al per alert een runbook in docs/rules/ (eigen
+# pagina of vermelding op een verzamelpagina) en draait over de héle
+# boom, niet alleen over de diff. Die assertie is strenger dan een
+# diff-gate; hem hier herhalen levert twee meldingen voor één fout en
+# geen extra dekking.
+
+rules:
+  - name: alertmanager-routing
+    reason: >-
+      Waar een alert uitkomt staat inline in stack/values.yaml onder
+      alertmanager.config en in alerting/; docs/alerting.md is de enige
+      plek die routes, receivers en de SOPS-procedure beschrijft.
+      Routing stilzwijgend verleggen betekent dat een pagina die
+      "hier komt het binnen" belooft, niet meer waar is — en dat merk
+      je pas tijdens een incident.
+    paths:
+      - "stack/**"
+      - "alerting/**"
+    exclude:
+      # Een geroteerde webhook of hersleutelde secret verandert geen
+      # gedrag dat te documenteren valt; de procedure zelf staat al in
+      # docs/alerting.md en wijzigt niet mee.
+      - "**/*.sops.yaml"
+
+  - name: scrape-en-dashboards
+    reason: >-
+      servicemonitors/ bepaalt welke metrics überhaupt bestaan en
+      grafana/dashboards/ consumeert precies die metrics;
+      docs/phpfpm-metrics.md beschrijft die keten van exporter tot
+      paneel. Verdwijnt of hernoemt een metric zonder dat de docs
+      meebewegen, dan blijft een dashboard stilletjes leeg.
+    paths:
+      - "servicemonitors/**"
+      - "grafana/dashboards/**"
+
+  - name: ops-scripts
+    reason: >-
+      De scripts in scripts/ voeren mens-vereiste handelingen uit tegen
+      cluster en Grafana (OAuth-secret, ArgoCD-repo-secret,
+      dashboard-apply). Hun header en de docs zijn de enige beschrijving
+      van wat ze aanrichten; verify.sh controleert hier geen
+      scripts-overzicht, dus zonder deze regel is er niets.
+    paths:
+      - "scripts/**"
+
+# Wijzigingen die aantoonbaar geen documentatie vragen.
+ignore:
+  # De kooi, niet het werk: agent-instructies beschrijven zichzelf.
+  - "CLAUDE.md"
+  - ".github/**"
+  - "tests/**"
+  - "CHANGELOG.md"
+
+escape:
+  trailer: "Docs-not-needed"
+  min_reason_len: 10
