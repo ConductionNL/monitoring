@@ -4,6 +4,33 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-10 (feature branches opgeruimd: alles op main)
+
+De twee loki-branches zijn leeggehaald zodat er geen eeuwige feature branch
+overblijft. Wat er nog buiten `main` lag:
+
+- **`feat/loki-stack`** — de fix-commit is hier gemerged (`--no-ff`, historie
+  behouden). Die is niet cosmetisch: zonder de omzetting naar het chart-schema
+  rendert de Loki-chart niet, en `apps/app-loki-prod.yaml` staat al op main.
+  Wie die Application had geapplied vóór deze merge, had een Application
+  gekregen die nooit kon syncen. Er is nog geen `loki`-Application in het
+  cluster, dus er is niets kapotgegaan.
+- **`feature/loki-stack-openspec`** — hiervan is alleen
+  `grafana/dashboards/nextcloud-environments.yaml` overgenomen: het
+  PHP-FPM-paneel legt nu de geconfigureerde limieten (`pm.max_children`,
+  start/spare-servers) over het actuele aantal processen heen, zodat je gebruik
+  tégen de limiet ziet in plaats van twee losse grafieken. Bij het overnemen
+  zijn de CRLF-regeleindes van die branch naar LF omgezet, conform
+  `.gitattributes` (commit `4e6f48c`).
+
+De rest van `feature/loki-stack-openspec` is bewust niet overgenomen. Die
+branch is een momentopname van 37 commits terug: een merge zou
+`scripts/verify.sh` verwijderen, de nieuwe argocd-alertregels weggooien en ~105
+bestanden terugzetten naar CRLF. De enige unieke inhoud was het dashboard
+hierboven en opsx-tooling in `.cursor/`, en die tooling staat op main al onder
+`.github/` — één agent-waarheid, zie commit `71ea0a6`. Beide branches kunnen na
+deze merge weg.
+
 ### Toegevoegd — 2026-08-10 (Loki + Alloy logstack, geport van een oude branch)
 
 Loki draait **niet** in het cluster: er is geen Argo CD-Application `loki`
