@@ -4,6 +4,42 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-10 (S3-secret opnieuw gezaaid; sops-aanname gecorrigeerd)
+
+De S3-secret voor Loki was versleuteld naar een age-recipient die niemand nog
+heeft. Dat hoefde geen blokkade te zijn: dezelfde Fuga-S3-credentials staan al
+in het cluster, in 85 namespaces, geseed uit
+`nextcloud-platform/nextcloud-s3-seed` (aangemaakt 2026-06-22). Endpoint en
+region zijn geen secret en staan in
+`Nextcloud-base/nextcloud-platform/values/env/accept.yaml`
+(`https://core.fuga.cloud:8080`, path-style).
+
+- `loki/secret-loki-s3.sops.yaml` opnieuw gezaaid naar de twee actuele
+  recipients uit `.sops.yaml`, met alle vier de variabelen die
+  `loki/values.yaml` verwacht: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  `S3_ENDPOINT`, `S3_REGION`. De waarden zijn nooit ontsleuteld weergegeven.
+- `apps/app-loki-prod.yaml`: `secret-*.sops.yaml` weer **uitgesloten** van de
+  manifest-source. De vorige entry beweerde dat de repo-server sops
+  ontsleutelt; dat is niet zo. Gecontroleerd in het cluster: de enige
+  `configManagementPlugin` is `helmfile`, er is geen age-sleutel in namespace
+  `argocd`, en de repo-server heeft geen sops-env of -binary. Zonder deze
+  uitsluiting applyt Argo het versleutelde bestand letterlijk en krijgt Loki
+  `ENC[AES256_GCM,...]` als wachtwoord — dezelfde klasse fout als 2026-07-13,
+  toen een applybaar voorbeeldbestand werkende secrets overschreef. Daarom is
+  `alerting/secret-alertmanager.sops.yaml` ook 100% commentaar en niet
+  applybaar.
+
+`loki-s3-credentials` is daarmee een bootstrap-secret dat een mens plaatst:
+`kubectl -n monitoring apply -f <(sops -d loki/secret-loki-s3.sops.yaml)`.
+
+**Openstaand besluit, geen wijziging hier:** dit is één sleutel voor de object
+storage van alle 85 Nextcloud-tenants. Die in `monitoring` zetten geeft de
+logstack read/write op alle klantdata. Voor een log-shipper is dat te veel;
+vraag bij Cyso een eigen sleutel plus een eigen bucket `loki-chunks`. De
+hergebruik-route werkt, maar hoort geen eindstand te zijn. Ook nog onbekend:
+of `S3_ENDPOINT` zonder schema en `S3_REGION: us-east-1` kloppen voor Loki's
+S3-client, en of de bucket `loki-chunks` bestaat.
+
 ### Gewijzigd — 2026-08-10 (feature branches opgeruimd: alles op main)
 
 De twee loki-branches zijn leeggehaald zodat er geen eeuwige feature branch

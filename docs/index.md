@@ -45,6 +45,12 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
   van vorige week niet meer te reconstrueren is.
 - **Opslag:** S3-compatible bucket `loki-chunks`; de credentials staan als
   SOPS-secret in `loki/secret-loki-s3.sops.yaml` (custody: `docs/alerting.md`).
+  **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
+  age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
+  manifest-source en wordt door een mens geplaatst:
+  `kubectl -n monitoring apply -f <(sops -d loki/secret-loki-s3.sops.yaml)`.
+  Neem het níét op in een Argo-source: dan landt `ENC[...]` als wachtwoord in
+  het cluster.
 - **Bevragen:** Grafana → Explore → datasource `Loki`, bijvoorbeeld
   `{namespace="monitoring"} |= "ERROR"`.
 
