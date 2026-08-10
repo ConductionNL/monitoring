@@ -11,50 +11,65 @@ global:
   extraArgs:
     - "-config.expand-env=true"
 
-loki:
-  # -- SingleBinary: alle componenten in één pod (eenvoudigst, voldoende tot ~20 GB/dag)
-  # Schakel over naar SimpleScalable als ingestie-volume groeit
-  deploymentMode: SingleBinary
+# -- SingleBinary: alle componenten in één pod (eenvoudigst, voldoende tot
+# ~20 GB/dag). Schakel over naar SimpleScalable als het ingestievolume groeit:
+# zet `singleBinary.replicas` op 0 en read/write/backend omhoog.
+#
+# LET OP: deze sleutel hoort op TOPNIVEAU, niet onder `loki:`. Stond hij daar
+# (t/m 2026-08-10), dan las de chart hem niet, viel hij terug op de default
+# SimpleScalable, en rolde hij met read/write/backend op 0 alleen de
+# memcached-caches uit — Loki zelf startte nooit. De chart rendert dan wél
+# zonder fout, dus `helm template` alleen is geen bewijs: controleer dat er een
+# StatefulSet `loki` met replicas 1 in de output staat.
+deploymentMode: SingleBinary
 
+loki:
   auth_enabled: false
 
-  # -- Opslag: S3-compatible (Ceph RGW, MinIO, etc.)
-  # Endpoint, buckets en regio zijn configureerbaar — geen provider-specifieke
-  # hardcoding.
+  # -- Opslag.
+  # STAND NU: filesystem, bewust en tijdelijk. Zie het blok "Omzetten naar S3"
+  # onderaan dit bestand — die omzetting raakt vier plekken, niet één.
   #
+  # Waarom niet direct S3: de enige beschikbare S3-sleutel is die van de
+  # Nextcloud-tenants, en die kan de object storage van alle 85 tenants lezen
+  # en schrijven. Die in de logstack hangen betekent dat een lek in Loki of
+  # Alloy bij klantdata komt. Tot Cyso een eigen sleutel plus een eigen bucket
+  # `loki-chunks` levert, draait Loki op de PVC van de SingleBinary-pod
+  # (`singleBinary.persistence`, 10Gi) — dat haalt de sleutelvraag van het
+  # kritieke pad zonder de uitrol te blokkeren.
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+  # -- S3-variant, klaar om aan te zetten zodra de eigen sleutel er is.
   # LET OP het schema. Dit is het *chart*-schema, niet dat van Loki's eigen
   # config: de bucketnamen staan onder `storage.bucketNames` (camelCase, apart
   # per gebruik) en de sleutels heten `accessKeyId`/`secretAccessKey`. De
   # eerdere vorm (`s3.bucketnames`, `access_key_id`) is die van loki.yaml zelf
-  # en liet de chart falen op `nil pointer evaluating interface {}.chunks` —
-  # de Application zou dus nooit gesynct hebben.
-  storage:
-    type: s3
-    bucketNames:
-      chunks: loki-chunks
-      # De ruler staat uit (zie `ruler.enabled` hieronder), maar de chart eist
-      # dit veld; dezelfde bucket volstaat.
-      ruler: loki-chunks
-    s3:
-      endpoint: ${S3_ENDPOINT}          # bijv. s3.fuga.cloud of minio.local:9000
-      region: ${S3_REGION}              # bijv. eu-west-1
-      accessKeyId: ${AWS_ACCESS_KEY_ID}
-      secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
-      s3ForcePathStyle: true            # vereist voor Ceph/MinIO
-      insecure: false
-
-  # -- Filesystem fallback (voor lokaal testen — deactiveer S3 hierboven)
+  # en liet de chart falen op `nil pointer evaluating interface {}.chunks`.
   # storage:
-  #   type: filesystem
-  #   filesystem:
-  #     chunks_directory: /var/loki/chunks
-  #     rules_directory: /var/loki/rules
+  #   type: s3
+  #   bucketNames:
+  #     chunks: loki-chunks
+  #     # De ruler staat uit (zie `ruler.enabled` hieronder), maar de chart
+  #     # eist dit veld; dezelfde bucket volstaat.
+  #     ruler: loki-chunks
+  #   s3:
+  #     endpoint: ${S3_ENDPOINT}        # host:port, zonder schema
+  #     region: ${S3_REGION}
+  #     accessKeyId: ${AWS_ACCESS_KEY_ID}
+  #     secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+  #     s3ForcePathStyle: true          # vereist voor Ceph/MinIO
+  #     insecure: false
 
   schemaConfig:
     configs:
       - from: "2024-01-01"
         store: tsdb
-        object_store: s3
+        # Hoort bij storage.type hierboven; mee omzetten naar s3.
+        object_store: filesystem
         schema: v13
         index:
           prefix: index_
@@ -70,7 +85,8 @@ loki:
   compactor:
     retention_enabled: true
     working_directory: /var/loki/compactor
-    delete_request_store: s3
+    # Hoort bij storage.type hierboven; mee omzetten naar s3.
+    delete_request_store: filesystem
 
   # -- Ruler uitgeschakeld: alle alerting gaat via Grafana Unified Alerting
   ruler:
@@ -102,13 +118,24 @@ singleBinary:
     enabled: true
     size: 10Gi
 
-# -- S3-credentials uit Kubernetes Secret (SOPS-versleuteld in Git)
-extraEnvFrom:
-  - secretRef:
-      name: loki-s3-credentials
+# -- S3-credentials uit Kubernetes Secret. Uit, omdat de filesystem-stand geen
+# credentials nodig heeft; zo start de pod ook als het secret er niet is.
+# extraEnvFrom:
+#   - secretRef:
+#       name: loki-s3-credentials
 
 # -- Gateway uitschakelen (intern cluster-verkeer, geen externe toegang nodig)
 gateway:
+  enabled: false
+
+# -- Memcached-caches uit in de filesystem-stand. De chart-defaults vragen
+# 9830Mi geheugen voor de chunks-cache en 1229Mi voor de results-cache
+# (requests én limits). Dat is er om latency naar object storage te dempen; bij
+# lokale schijf valt er niets te dempen, dus het is puur beslag op de nodes.
+# Zet ze aan bij de omzetting naar S3 en kies dan bewust een grootte.
+chunksCache:
+  enabled: false
+resultsCache:
   enabled: false
 
 # -- Monitoring: serviceMonitor voor Loki zelf (optioneel, Prometheus scrapet Loki-metrics)
@@ -121,3 +148,30 @@ monitoring:
 # -- Test pod uitschakelen
 test:
   enabled: false
+
+# ---------------------------------------------------------------------------
+# Omzetten naar S3 — vier plekken, niet één
+# ---------------------------------------------------------------------------
+# Vergeet je er één, dan start Loki wél maar schrijft hij naar de verkeerde
+# plek of valt hij om op een ontbrekend veld. In deze volgorde:
+#
+#   1. `loki.storage`             — filesystem-blok uit, S3-blok aan
+#   2. `loki.schemaConfig`        — object_store: filesystem -> s3
+#   3. `loki.compactor`           — delete_request_store: filesystem -> s3
+#   4. `extraEnvFrom` (onderaan)  — weer aanzetten, want dat levert
+#                                   ${S3_ENDPOINT} en de sleutels
+#
+# Vooraf nodig: de bucket `loki-chunks` bestaat, en het bootstrap-secret
+# `loki-s3-credentials` staat in namespace monitoring (Argo plaatst dat niet —
+# zie apps/app-loki-prod.yaml en docs/index.md).
+#
+# Nog onbeproefd op deze S3: `S3_ENDPOINT` zonder schema (`core.fuga.cloud:8080`)
+# en `S3_REGION`. Nextcloud gebruikt daar `https://…:8080` en een leeg region.
+# Klaagt de pod over endpoint of region, dan zijn dat de eerste twee knoppen.
+#
+# Controleer de omzetting vóór de sync met:
+#   helm template loki loki --repo https://grafana.github.io/helm-charts \
+#     --version 6.29.0 -f loki/values.yaml >/dev/null
+#
+# Na de omzetting is de PVC van de SingleBinary-pod overbodig; de logs die er
+# in staan verhuizen niet mee. Ruim hem pas op als je de retentie kwijt mag.

@@ -41,9 +41,20 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
   `container` en `node`. De namespace `kube-system` is uitgesloten. De
   exclusielijst staat in `loki/alloy-config.yaml`.
 - **Hoe lang:** `retention_period: 168h` (7 dagen), in `loki/values.yaml`.
-  Langer bewaren betekent meer S3-opslag; korter betekent dat een incident
-  van vorige week niet meer te reconstrueren is.
-- **Opslag:** S3-compatible bucket `loki-chunks`; de credentials staan als
+  Langer bewaren betekent meer opslag; korter betekent dat een incident van
+  vorige week niet meer te reconstrueren is. Let op de PVC-grootte: 7 dagen
+  moet in de 10Gi van `singleBinary.persistence` passen.
+- **Opslag nu: lokale schijf, bewust en tijdelijk.** `loki.storage.type` staat
+  op `filesystem` en de logs staan op de PVC van de SingleBinary-pod (10Gi).
+  Reden: de enige beschikbare S3-sleutel is die van de Nextcloud-tenants en kan
+  bij de object storage van alle 85 tenants. Die aan de logstack hangen is te
+  veel; tot Cyso een eigen sleutel plus bucket `loki-chunks` levert draait Loki
+  op schijf. Zo staat de uitrol niet stil op die vraag.
+  Omzetten naar S3 raakt **vier** plekken in `loki/values.yaml` — de checklist
+  staat onderaan dat bestand. `deploymentMode` hoort daarbij op topniveau, niet
+  onder `loki:`; stond het fout, dan rendert de chart zonder klagen maar start
+  Loki zelf nooit.
+- **Opslag straks (S3):** bucket `loki-chunks`; de credentials staan als
   SOPS-secret in `loki/secret-loki-s3.sops.yaml` (custody: `docs/alerting.md`).
   **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
   age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
