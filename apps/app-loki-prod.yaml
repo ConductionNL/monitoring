@@ -29,17 +29,27 @@ spec:
   - repoURL: https://github.com/ConductionNL/monitoring.git
     targetRevision: main
     ref: values
-  # 4. Plain manifests uit loki/: datasource, Alloy-config, alertregels en
-  #    de SOPS-secret. De twee values-bestanden horen bij bron 1 en 2 en
-  #    zijn hier uitgesloten; de SOPS-secret staat er bewust wél in, net
-  #    zoals alerting/secret-alertmanager.sops.yaml in app-prom-prod.yaml
-  #    (argocd-repo-server ontsleutelt, zie docs/alerting.md).
+  # 4. Plain manifests uit loki/: datasource, Alloy-config en alertregels.
+  #    De twee values-bestanden horen bij bron 1 en 2 en zijn uitgesloten.
+  #
+  #    De SOPS-secret is óók uitgesloten, en dat is geen detail: deze Argo CD
+  #    ontsleutelt géén sops. Gecontroleerd op 2026-08-10 — de enige
+  #    configManagementPlugin is `helmfile`, er is geen age-sleutel in de
+  #    namespace argocd en de repo-server heeft geen sops-env. Zou het bestand
+  #    hier wél in staan, dan applyt Argo het letterlijk en krijgt Loki een
+  #    Secret met `ENC[AES256_GCM,...]` als wachtwoord. Dat is de fout van
+  #    2026-07-13 (applybaar voorbeeldbestand overschreef werkende secrets),
+  #    en de reden dat alerting/secret-alertmanager.sops.yaml 100% commentaar
+  #    is in plaats van applybaar.
+  #
+  #    loki-s3-credentials is dus een bootstrap-secret dat een mens plaatst:
+  #      kubectl -n monitoring apply -f <(sops -d loki/secret-loki-s3.sops.yaml)
   - repoURL: https://github.com/ConductionNL/monitoring.git
     targetRevision: main
     path: loki
     directory:
       recurse: true
-      exclude: '{values.yaml,alloy-values.yaml}'
+      exclude: '{values.yaml,alloy-values.yaml,secret-*.sops.yaml}'
   syncPolicy:
     automated:
       prune: true
