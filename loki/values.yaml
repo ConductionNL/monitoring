@@ -2,6 +2,15 @@
 # Deployt Loki in SingleBinary mode binnen monitoring namespace
 # Chart: https://grafana.github.io/helm-charts (grafana/loki)
 
+# -- Env-expansie aanzetten. De storage-blokken hieronder gebruiken
+# ${S3_ENDPOINT}, ${S3_REGION} en de AWS-sleutels; Loki vult die NIET vanzelf
+# in. Zonder deze vlag komen die placeholders letterlijk in de config terecht
+# en faalt elke S3-call op een endpoint dat "${S3_ENDPOINT}" heet. De chart
+# noemt deze vlag zelf als voorbeeld bij global.extraArgs.
+global:
+  extraArgs:
+    - "-config.expand-env=true"
+
 loki:
   # -- SingleBinary: alle componenten in één pod (eenvoudigst, voldoende tot ~20 GB/dag)
   # Schakel over naar SimpleScalable als ingestie-volume groeit
@@ -10,15 +19,27 @@ loki:
   auth_enabled: false
 
   # -- Opslag: S3-compatible (Ceph RGW, MinIO, etc.)
-  # Endpoint, bucket en regio zijn configureerbaar — geen provider-specifieke hardcoding
+  # Endpoint, buckets en regio zijn configureerbaar — geen provider-specifieke
+  # hardcoding.
+  #
+  # LET OP het schema. Dit is het *chart*-schema, niet dat van Loki's eigen
+  # config: de bucketnamen staan onder `storage.bucketNames` (camelCase, apart
+  # per gebruik) en de sleutels heten `accessKeyId`/`secretAccessKey`. De
+  # eerdere vorm (`s3.bucketnames`, `access_key_id`) is die van loki.yaml zelf
+  # en liet de chart falen op `nil pointer evaluating interface {}.chunks` —
+  # de Application zou dus nooit gesynct hebben.
   storage:
     type: s3
+    bucketNames:
+      chunks: loki-chunks
+      # De ruler staat uit (zie `ruler.enabled` hieronder), maar de chart eist
+      # dit veld; dezelfde bucket volstaat.
+      ruler: loki-chunks
     s3:
       endpoint: ${S3_ENDPOINT}          # bijv. s3.fuga.cloud of minio.local:9000
-      bucketnames: loki-chunks
       region: ${S3_REGION}              # bijv. eu-west-1
-      access_key_id: ${AWS_ACCESS_KEY_ID}
-      secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+      accessKeyId: ${AWS_ACCESS_KEY_ID}
+      secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
       s3ForcePathStyle: true            # vereist voor Ceph/MinIO
       insecure: false
 
@@ -56,6 +77,18 @@ loki:
     enabled: false
 
 # -- SingleBinary replica's en resources
+# -- SimpleScalable-targets expliciet op nul. De chart-defaults zetten read,
+# write en backend op replicas > 0; samen met singleBinary.replicas: 1 valt hij
+# dan over zijn eigen validatie ("more than zero replicas configured for both
+# the single binary and simple scalable targets"). Wie later naar
+# SimpleScalable wil, zet singleBinary op 0 en deze drie omhoog.
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
 singleBinary:
   replicas: 1
   resources:
