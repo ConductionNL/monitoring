@@ -2,15 +2,6 @@
 # Deployt Loki in SingleBinary mode binnen monitoring namespace
 # Chart: https://grafana.github.io/helm-charts (grafana/loki)
 
-# -- Env-expansie aanzetten. De storage-blokken hieronder gebruiken
-# ${S3_ENDPOINT}, ${S3_REGION} en de AWS-sleutels; Loki vult die NIET vanzelf
-# in. Zonder deze vlag komen die placeholders letterlijk in de config terecht
-# en faalt elke S3-call op een endpoint dat "${S3_ENDPOINT}" heet. De chart
-# noemt deze vlag zelf als voorbeeld bij global.extraArgs.
-global:
-  extraArgs:
-    - "-config.expand-env=true"
-
 # -- SingleBinary: alle componenten in één pod (eenvoudigst, voldoende tot
 # ~20 GB/dag). Schakel over naar SimpleScalable als het ingestievolume groeit:
 # zet `singleBinary.replicas` op 0 en read/write/backend omhoog.
@@ -58,8 +49,16 @@ loki:
       # dit veld; dezelfde bucket volstaat.
       ruler: loki-chunks
     s3:
-      endpoint: ${S3_ENDPOINT}          # host:port, zonder schema
-      region: ${S3_REGION}
+      # Endpoint en region staan hier letterlijk: het zijn geen secrets (ze
+      # staan ook in Nextcloud-base/nextcloud-platform/values/env/accept.yaml)
+      # en zo hangen er twee placeholders minder aan de env-expansie. Vorm:
+      # host:port zonder schema — met `insecure: false` maakt Loki daar
+      # https://core.fuga.cloud:8080 van. Bewezen werkend met `aws s3 ls`
+      # tegen ditzelfde endpoint op 2026-08-11.
+      endpoint: core.fuga.cloud:8080
+      region: us-east-1
+      # Alleen de sleutels komen uit het secret, via env-expansie. Dat vergt
+      # `-config.expand-env=true` in singleBinary.extraArgs — zie daar.
       accessKeyId: ${AWS_ACCESS_KEY_ID}
       secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
       s3ForcePathStyle: true            # vereist voor Ceph/Fuga
@@ -117,6 +116,20 @@ backend:
 
 singleBinary:
   replicas: 1
+
+  # -- Env-expansie aanzetten. Zonder deze vlag zet Loki `${AWS_ACCESS_KEY_ID}`
+  # letterlijk in zijn config en faalt elke S3-call. Aangetoond op 2026-08-11:
+  # met de vlag op `global.extraArgs` kreeg de container hem NIET, elke
+  # S3-request gaf 500 en de ingester logde
+  # `InvalidEndpointURL: parse "https://${S3_ENDPOINT}": invalid character "{"`.
+  #
+  # LET OP de nestingsdiepte: `global.extraArgs` en `loki.extraArgs` worden
+  # allebei genegeerd — beide getest met `helm template`. Alleen de
+  # per-component vorm landt op de container. Ga je naar SimpleScalable, dan
+  # moet deze vlag onder `write`, `read` én `backend`.
+  extraArgs:
+    - "-config.expand-env=true"
+
   resources:
     requests:
       cpu: 100m
