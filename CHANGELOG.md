@@ -4,6 +4,41 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-11 (S3 schreef niet: env-expansie stond nooit aan)
+
+Na de omzetting naar S3 kwam Loki omhoog, gaf `/ready` 200 en werkten queries —
+maar **elke** S3-call faalde. De metrics waren ondubbelzinnig:
+`loki_s3_request_duration_seconds_count` gaf `status_code="500"` op PutObject
+(71), GetObject (35), List (11) en DeleteObject (1), en de ingester logde:
+
+    failed to flush chunks: store put chunk: InvalidEndpointURL:
+    parse "https://${S3_ENDPOINT}": invalid character "{" in host name
+
+De placeholder stond dus letterlijk in de config: `-config.expand-env=true` was
+nooit op de container terechtgekomen. Die vlag stond op `global.extraArgs`, en
+dat pad bestaat niet in deze chart. `loki.extraArgs` werkt óók niet; alleen de
+per-component vorm landt. Beide varianten getest met `helm template`.
+
+- `loki/values.yaml`: `-config.expand-env=true` van `global.extraArgs` naar
+  `singleBinary.extraArgs`. Geverifieerd in de render: de container-args zijn nu
+  `-config.file=… -target=all -config.expand-env=true`.
+- Endpoint en region staan nu **letterlijk** in de values in plaats van als
+  `${S3_ENDPOINT}`/`${S3_REGION}`: het zijn geen secrets, ze staan ook in
+  `Nextcloud-base/…/values/env/accept.yaml`, en zo hangen er twee placeholders
+  minder aan de env-expansie. `core.fuga.cloud:8080` is bewezen werkend met
+  `aws s3 ls` tegen datzelfde endpoint. Alleen de twee sleutels komen nog uit
+  het secret, dus als de expansie ooit weer stukgaat is de foutmelding meteen
+  duidelijk.
+
+Negende defect van dezelfde klasse in dit ene values-bestand: een waarde op de
+verkeerde nestingsdiepte die de chart stil negeert. De lijst tot nu toe:
+`deploymentMode`, `extraEnvFrom`, `extraArgs`, en bij Alloy `resources`. Geen
+enkele daarvan gaf een render-fout; alle vier waren alleen te vinden door de
+gerenderde output te vergelijken met wat er bedoeld was, en daarna te meten of
+de functie echt werkte.
+
+Bucket `loki-chunks` is aangemaakt op 2026-08-11 (leeg, `aws s3 mb`).
+
 ### Gewijzigd — 2026-08-11 (Loki naar S3; mijn blast-radius-bezwaar was onjuist)
 
 De filesystem-tussenstand is vervangen door S3, bucket `loki-chunks`.
