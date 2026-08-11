@@ -26,6 +26,15 @@ deploymentMode: SingleBinary
 loki:
   auth_enabled: false
 
+  # -- Replicatiefactor op 1. Verplicht bij SingleBinary: de chart-default is 3
+  # en dan kan de ring die factor met één ingester nooit halen. Loki komt dan
+  # wél omhoog en /ready geeft 200, maar élke query faalt met
+  # `500 too many unhealthy instances in the ring` — terwijl /ring precies één
+  # ACTIVE instance toont. Aangetoond op 2026-08-11 bij de eerste uitrol.
+  # Zet dit mee omhoog als je naar SimpleScalable gaat met 3+ ingesters.
+  commonConfig:
+    replication_factor: 1
+
   # -- Opslag.
   # STAND NU: filesystem, bewust en tijdelijk. Zie het blok "Omzetten naar S3"
   # onderaan dit bestand — die omzetting raakt vier plekken, niet één.
