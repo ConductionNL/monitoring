@@ -4,6 +4,48 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-10 (Loki eerst op filesystem; twee defecten in de geporte values)
+
+Loki gaat eerst op lokale schijf in plaats van S3. Reden: de enige beschikbare
+S3-sleutel is die van de Nextcloud-tenants en kan bij de object storage van
+alle 85 tenants. Dat aan een log-shipper hangen is te veel. Op filesystem kun
+je de stack nu uitrollen en aantonen dat Alloy podlogs binnenkrijgt, en gaat S3
+aan zodra Cyso een eigen sleutel plus bucket `loki-chunks` levert. De logs
+staan op de 10Gi-PVC van de SingleBinary-pod, dus dit is een werkende
+tussenstand en geen wegwerpopstelling.
+
+- `loki/values.yaml`: `storage.type: filesystem` met chunks/rules-directories;
+  het S3-blok staat er uitgecommentarieerd bij. De omzetting raakt **vier**
+  plekken, en dat is nu een checklist onderaan het bestand:
+  `loki.storage`, `loki.schemaConfig.object_store`,
+  `loki.compactor.delete_request_store` en `extraEnvFrom`. Die middelste twee
+  stonden nog op `s3` terwijl `storage.type` iets anders zei — precies het
+  soort halve omzetting waar die checklist tegen beschermt.
+- `extraEnvFrom` uit: de filesystem-stand heeft geen credentials nodig, en zo
+  start de pod ook als het secret er niet is.
+
+**Twee defecten die hierbij aan het licht kwamen, beide uit de geporte branch:**
+
+1. **`deploymentMode` stond onder `loki:` in plaats van op topniveau.** De
+   chart las hem dus niet, viel terug op de default `SimpleScalable` en rolde
+   met `read`/`write`/`backend` op `replicas: 0` alleen de memcached-caches uit.
+   **Loki zelf startte nooit.** Aangetoond met `helm template`: vóór de fix gaf
+   de render `loki-read`, `loki-write` en `loki-backend`, alle drie op
+   `replicas: 0`, en géén StatefulSet `loki`; erna één StatefulSet `loki` met
+   `replicas: 1` en een volumeClaimTemplate. Les voor de volgende keer: de
+   chart rendert in beide gevallen zonder fout, dus "het rendert" is geen
+   bewijs — controleer dat er een StatefulSet `loki` in de output staat.
+2. **De chunks-cache vroeg 9830Mi geheugen** (requests én limits), de
+   results-cache 1229Mi. Chart-defaults, bedoeld om latency naar object storage
+   te dempen; bij lokale schijf valt er niets te dempen, dus het was puur
+   beslag op de nodes. `chunksCache` en `resultsCache` uit; bij de omzetting
+   naar S3 weer aan, met een bewust gekozen grootte.
+
+Na deze wijziging rendert de chart 12 resources: StatefulSet `loki`
+(`replicas: 1`, één PVC), de canary-DaemonSet en het bijbehorende netwerk. Geen
+memcached meer, en `filesystem` op alle drie de storage-plekken in de
+gerenderde config.
+
 ### Gewijzigd — 2026-08-10 (S3-secret opnieuw gezaaid; sops-aanname gecorrigeerd)
 
 De S3-secret voor Loki was versleuteld naar een age-recipient die niemand nog
