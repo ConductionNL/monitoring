@@ -42,20 +42,21 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
   exclusielijst staat in `loki/alloy-config.yaml`.
 - **Hoe lang:** `retention_period: 168h` (7 dagen), in `loki/values.yaml`.
   Langer bewaren betekent meer opslag; korter betekent dat een incident van
-  vorige week niet meer te reconstrueren is. Let op de PVC-grootte: 7 dagen
-  moet in de 10Gi van `singleBinary.persistence` passen.
-- **Opslag nu: lokale schijf, bewust en tijdelijk.** `loki.storage.type` staat
-  op `filesystem` en de logs staan op de PVC van de SingleBinary-pod (10Gi).
-  Reden: de enige beschikbare S3-sleutel is die van de Nextcloud-tenants en kan
-  bij de object storage van alle 85 tenants. Die aan de logstack hangen is te
-  veel; tot Cyso een eigen sleutel plus bucket `loki-chunks` levert draait Loki
-  op schijf. Zo staat de uitrol niet stil op die vraag.
-  Omzetten naar S3 raakt **vier** plekken in `loki/values.yaml` — de checklist
-  staat onderaan dat bestand. `deploymentMode` hoort daarbij op topniveau, niet
-  onder `loki:`; stond het fout, dan rendert de chart zonder klagen maar start
-  Loki zelf nooit.
-- **Opslag straks (S3):** bucket `loki-chunks`; de credentials staan als
-  SOPS-secret in `loki/secret-loki-s3.sops.yaml` (custody: `docs/alerting.md`).
+  vorige week niet meer te reconstrueren is. Ter maatvoering: op 2026-08-11 kwam
+  er 207 KB/s binnen aan de distributor-ingang, dus 16,7 GiB/dag ruw en ~117 GiB
+  over 7 dagen; na compressie grofweg 15–30 GiB in S3.
+- **Opslag: S3, bucket `loki-chunks`.** Endpoint, region en sleutels komen uit
+  secret `loki-s3-credentials`, niet uit de values. De PVC van de
+  SingleBinary-pod blijft nodig voor de WAL en de index-cache.
+  Een wissel tussen S3 en filesystem raakt **vier** plekken in
+  `loki/values.yaml`; de checklist staat onderaan dat bestand.
+  Twee valkuilen die daar allebei ingelopen zijn: `deploymentMode` hoort op
+  topniveau (niet onder `loki:`) en `extraEnvFrom` hoort onder `singleBinary`
+  (niet op topniveau, en ook niet onder `loki:`). In beide gevallen rendert de
+  chart zonder klagen — bij de eerste start Loki nooit, bij de tweede krijgt de
+  pod de S3-credentials niet.
+- **Credentials:** als SOPS-secret in `loki/secret-loki-s3.sops.yaml`
+  (custody: `docs/alerting.md`).
   **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
   age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
   manifest-source en wordt door een mens geplaatst:

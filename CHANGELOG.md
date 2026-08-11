@@ -4,6 +4,47 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-11 (Loki naar S3; mijn blast-radius-bezwaar was onjuist)
+
+De filesystem-tussenstand is vervangen door S3, bucket `loki-chunks`.
+
+**Waarom de tussenstand er stond, en waarom dat niet klopte.** Ik voerde aan dat
+de enige beschikbare S3-sleutel die van de Nextcloud-tenants is en dus bij
+klantdata kan. Dat kwam uit `Nextcloud-base/docs/STORAGE-OPERATIONS.md`, waar bij
+`s3 rm` staat "dit verwijdert ALLE user data permanent". Nagetrokken in het
+cluster is dat onjuist: er zijn **nul** objectstore-ConfigMaps, de
+S3-objectstore staat in `canary-overrides.yaml` als "IN VALIDATION on
+canary-prod" en "graduates to env/prod.yaml", en klantdata leeft in Postgres.
+Die documentatie beschrijft dus een toestand die nog niet bestaat. Les: een
+argument over blast radius hoort op een clustermeting te rusten, niet op een
+runbook.
+
+- `loki/values.yaml`: `storage.type: s3` met `bucketNames.chunks: loki-chunks`,
+  en `schemaConfig.object_store` plus `compactor.delete_request_store` mee naar
+  `s3`. Het filesystem-blok staat er uitgecommentarieerd bij; de wisselchecklist
+  onderaan het bestand werkt nu beide richtingen op.
+- **`extraEnvFrom` stond op topniveau en werd genegeerd.** Achtste defect van
+  dezelfde klasse in dit bestand. In SingleBinary-mode hoort dit onder
+  `singleBinary`; zowel topniveau als `loki.extraEnvFrom` levert een pod zónder
+  `envFrom` op — beide getest met `helm template`. Zonder dat blijven
+  `${S3_ENDPOINT}` en de sleutels letterlijk in de config staan en faalt elke
+  S3-call. Verplaatst en geverifieerd: het secret staat nu echt als `envFrom` op
+  de container.
+- De caches blijven uit. Op S3 hebben ze wél nut, maar de chart-defaults vragen
+  9830Mi en 1229Mi; aanzetten is een bewuste tuningstap met een gekozen
+  `allocatedMemory`, geen bijproduct van deze wissel.
+- `docs/index.md`: opslagsectie herschreven, met beide nestingsvalkuilen expliciet.
+
+Vereist vóór de sync, want Loki maakt geen buckets aan: de bucket `loki-chunks`
+moet bestaan. Nog onbeproefd op deze S3: `S3_ENDPOINT` zonder schema
+(`core.fuga.cloud:8080`) en `S3_REGION: us-east-1`, terwijl de Nextcloud-tenants
+`https://…:8080` met een leeg region gebruiken. Klaagt de pod over endpoint of
+region, dan zijn dat de eerste twee knoppen; die waarden zitten in het secret.
+
+Hiermee vervalt de noodzaak van de 50Gi-PVC uit branch `chore/loki-pvc-50gi`:
+op S3 houdt de PVC alleen nog de WAL en de index-cache, en is 10Gi ruim genoeg.
+Die branch is daarom niet gemerged.
+
 ### Gewijzigd — 2026-08-11 (Alloy verzamelde niets: logpad, glob-expansie en de ontbrekende mount)
 
 Na de replicatiefactor-fix antwoordde Loki wél (`/loki/api/v1/labels` → 200)
