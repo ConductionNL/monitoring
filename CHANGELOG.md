@@ -4,6 +4,28 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-11 (Loki: replicatiefactor op 1 — queries faalden)
+
+Bij de eerste echte uitrol kwam Loki omhoog (`loki-0` ready in 20s, 0 restarts,
+PVC bound, Alloy 10/10) maar **faalde elke query** met
+`500 too many unhealthy instances in the ring`. De ring zelf was gezond: `/ring`
+toonde precies één `ACTIVE` instance en geen enkele unhealthy.
+
+Oorzaak: `loki.commonConfig.replication_factor` stond niet in
+`loki/values.yaml`, dus gold de chart-default **3**. Met één ingester is die
+factor onhaalbaar en weigert het query-pad elke read. Bij SingleBinary hoort dit
+op 1.
+
+- `loki/values.yaml`: `loki.commonConfig.replication_factor: 1`, met de reden en
+  het symptoom erbij zodat een volgende lezer die 500 niet opnieuw hoeft te
+  debuggen. Gecontroleerd in de gerenderde config, niet alleen in de values.
+
+Dit is het derde defect uit de geporte branch, na `deploymentMode` op de
+verkeerde nestingsdiepte en de 9830Mi-cache. Alle drie hebben hetzelfde patroon:
+de chart rendert zonder klagen en de pod start, maar de functie werkt niet.
+`helm template` alleen is hier dus geen gate — wat wél werkte was de gerenderde
+`StatefulSet`-lijst nakijken, en nu een echte query tegen de draaiende Loki.
+
 ### Gewijzigd — 2026-08-10 (Loki eerst op filesystem; twee defecten in de geporte values)
 
 Loki gaat eerst op lokale schijf in plaats van S3. Reden: de enige beschikbare
