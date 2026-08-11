@@ -3,7 +3,13 @@ name: Connectivity Smoke (disabled)
 on:
   workflow_dispatch:
 
-permissions: {}
+# Deze workflow leest niets en schrijft niets, maar zonder expliciet block
+# krijgt GITHUB_TOKEN de repo-standaard. CodeQL merkt dat terecht op: de
+# volgende stap die hier wordt bijgeplakt erft dan stilzwijgend meer rechten
+# dan hij nodig heeft. Bij het heractiveren (zie de echo hieronder) hoort dit
+# mee te groeien met wat de job dan echt doet.
+permissions:
+  contents: read
 
 jobs:
   smoke:

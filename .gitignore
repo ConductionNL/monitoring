@@ -5,6 +5,10 @@ repo-ssh-*.yaml
 **/.env
 **/.env.*
 grafana/.env
+# ...maar het voorbeeldbestand hoort er wél in: het bevat sleutelnamen, geen
+# waarden, en is de enige plek waar staat welke variabelen Grafana verwacht.
+!.env.example
+!**/.env.example
 
 # age-sleutelmateriaal — elk privaat keybestand, ongeacht naam
 *.agekey

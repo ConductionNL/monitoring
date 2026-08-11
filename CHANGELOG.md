@@ -4,6 +4,39 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-11 (restjes uit drie oude branches verwerkt, daarna opgeruimd)
+
+Drie branches lagen nog los. Wat er bruikbaar in zat is hier verwerkt, de rest
+kan weg.
+
+**Uit `fix/workflow-permissions` (commit b097a02, 2026-08-07):**
+
+- `.github/workflows/connectivity.yml`: expliciete `permissions: contents: read`.
+  Zonder dat blok krijgt `GITHUB_TOKEN` de repo-standaard, en erft een volgende
+  stap die erbij geplakt wordt stilzwijgend meer rechten dan hij nodig heeft.
+  CodeQL merkte dat op. Bij het heractiveren van die workflow hoort dit mee te
+  groeien met wat de job dan echt doet.
+- `.gitignore`: `!.env.example` (en de `**`-variant) als uitzondering op
+  `.env.*`. Het voorbeeldbestand bevat sleutelnamen en geen waarden, en is de
+  enige plek waar staat welke variabelen Grafana verwacht. `.env.*` en `*.pem`
+  uit diezelfde commit stonden al op main.
+
+**Uit `chore/loki-pvc-50gi` (niet gemerged, en dat blijft zo):** de PVC-vergroting
+naar 50Gi is niet meer nodig sinds Loki op S3 schrijft — de PVC houdt daar alleen
+nog de WAL en de index-cache. De **procedure** eromheen is wél de moeite en staat
+nu in `docs/index.md`: `volumeClaimTemplates` van een StatefulSet is
+onveranderlijk, dus een nieuwe `size` in de values alléén doet niets en Argo's
+apply faalt op `updates to statefulset spec ... are forbidden`. Het volume moet
+met een PVC-patch groeien en de StatefulSet moet met `--cascade=orphan` weg zodat
+Argo hem met het nieuwe template opnieuw aanmaakt.
+
+**Uit `feature/loki-stack-openspec` (commit 9f6c49a, 2026-06-03):** niets meer.
+De dashboardverbetering is op 2026-08-10 overgenomen; de rest van die commit is
+opsx-tooling onder `.claude/**` en `.cursor/**`, die main al onder `.github/**`
+heeft (één agent-waarheid, commit `71ea0a6`), plus `docs/AGENTS.md` en
+`alerting/alertmanager.yaml` die main juist bewust heeft opgeruimd. De branch is
+daarmee leeg te verklaren.
+
 ### Gewijzigd — 2026-08-11 (S3 schreef niet: env-expansie stond nooit aan)
 
 Na de omzetting naar S3 kwam Loki omhoog, gaf `/ready` 200 en werkten queries —

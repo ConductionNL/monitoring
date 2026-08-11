@@ -57,6 +57,22 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
   pod de S3-credentials niet.
 - **Credentials:** als SOPS-secret in `loki/secret-loki-s3.sops.yaml`
   (custody: `docs/alerting.md`).
+- **PVC vergroten** (de WAL en index-cache staan er nog op, dus dit kan nodig
+  blijven): `volumeClaimTemplates` van een StatefulSet is **onveranderlijk**. Een
+  nieuwe `size` in de values alléén werkt dus niet — Argo's apply faalt op
+  `updates to statefulset spec ... are forbidden`. Alle storage classes in dit
+  cluster hebben `allowVolumeExpansion: true`, dus:
+
+      # 1. het bestaande volume laten groeien (pod blijft draaien)
+      kubectl -n monitoring patch pvc storage-loki-0 \
+        -p '{"spec":{"resources":{"requests":{"storage":"<nieuw>"}}}}'
+
+      # 2. de StatefulSet weghalen maar de pod laten staan, zodat Argo hem
+      #    opnieuw aanmaakt met het nieuwe volumeClaimTemplate
+      kubectl -n monitoring delete statefulset loki --cascade=orphan
+
+  Zonder stap 1 groeit het bestaande volume niet mee; zonder stap 2 blijft de
+  nieuwe grootte alleen in git staan.
   **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
   age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
   manifest-source en wordt door een mens geplaatst:
