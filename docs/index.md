@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-11
 owner: info@conduction.nl
 ---
 
@@ -44,19 +44,38 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
   Langer bewaren betekent meer opslag; korter betekent dat een incident van
   vorige week niet meer te reconstrueren is. Ter maatvoering: op 2026-08-11 kwam
   er 207 KB/s binnen aan de distributor-ingang, dus 16,7 GiB/dag ruw en ~117 GiB
-  over 7 dagen; na compressie grofweg 15–30 GiB in S3.
-- **Opslag: S3, bucket `loki-chunks`.** Endpoint, region en sleutels komen uit
-  secret `loki-s3-credentials`, niet uit de values. De PVC van de
-  SingleBinary-pod blijft nodig voor de WAL en de index-cache.
+  over 7 dagen; na compressie grofweg 15–30 GiB in S3. Dat is gemeten terwijl
+  Alloy bestaande logbestanden inhaalde, dus de rustsituatie ligt vermoedelijk
+  lager — meet opnieuw voordat je er capaciteit op baseert.
+- **Opslag: S3, bucket `loki-chunks`.** Endpoint (`core.fuga.cloud:8080`,
+  host:port zonder schema) en region staan **letterlijk** in
+  `loki/values.yaml`; het zijn geen secrets. Alleen `AWS_ACCESS_KEY_ID` en
+  `AWS_SECRET_ACCESS_KEY` komen uit secret `loki-s3-credentials`, via
+  env-expansie. De PVC van de SingleBinary-pod blijft nodig voor de WAL en de
+  index-cache.
   Een wissel tussen S3 en filesystem raakt **vier** plekken in
   `loki/values.yaml`; de checklist staat onderaan dat bestand.
-  Twee valkuilen die daar allebei ingelopen zijn: `deploymentMode` hoort op
-  topniveau (niet onder `loki:`) en `extraEnvFrom` hoort onder `singleBinary`
-  (niet op topniveau, en ook niet onder `loki:`). In beide gevallen rendert de
-  chart zonder klagen — bij de eerste start Loki nooit, bij de tweede krijgt de
-  pod de S3-credentials niet.
+- **Let op de nestingsdiepte in de values.** De chart negeert waardes op de
+  verkeerde diepte zonder te klagen, en `helm template` slaagt dan nog steeds.
+  Vier gevallen die hier alle vier zijn ingelopen:
+
+  | Sleutel | Hoort | Symptoom als hij fout staat |
+  |---|---|---|
+  | `deploymentMode` | topniveau | chart valt terug op SimpleScalable; Loki start nooit |
+  | `extraEnvFrom` | onder `singleBinary` | pod krijgt de S3-credentials niet |
+  | `extraArgs` | onder `singleBinary` | geen env-expansie; `${S3_ENDPOINT}` blijft letterlijk, elke S3-call 500 |
+  | `resources` (Alloy) | onder `alloy` | container draait zonder requests of limits |
+
+  Controleer na een wijziging dus de **gerenderde** output op het veld dat je
+  bedoelde, niet of de render slaagt.
 - **Credentials:** als SOPS-secret in `loki/secret-loki-s3.sops.yaml`
   (custody: `docs/alerting.md`).
+  **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
+  age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
+  manifest-source en wordt door een mens geplaatst:
+  `kubectl -n monitoring apply -f <(sops -d loki/secret-loki-s3.sops.yaml)`.
+  Neem het níét op in een Argo-source: dan landt `ENC[...]` als wachtwoord in
+  het cluster.
 - **PVC vergroten** (de WAL en index-cache staan er nog op, dus dit kan nodig
   blijven): `volumeClaimTemplates` van een StatefulSet is **onveranderlijk**. Een
   nieuwe `size` in de values alléén werkt dus niet — Argo's apply faalt op
@@ -73,12 +92,6 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 
   Zonder stap 1 groeit het bestaande volume niet mee; zonder stap 2 blijft de
   nieuwe grootte alleen in git staan.
-  **Argo CD ontsleutelt dat bestand niet** — er is geen sops-plugin en geen
-  age-sleutel in de namespace `argocd`. Het is daarom uitgesloten van de
-  manifest-source en wordt door een mens geplaatst:
-  `kubectl -n monitoring apply -f <(sops -d loki/secret-loki-s3.sops.yaml)`.
-  Neem het níét op in een Argo-source: dan landt `ENC[...]` als wachtwoord in
-  het cluster.
 - **Bevragen:** Grafana → Explore → datasource `Loki`, bijvoorbeeld
   `{namespace="monitoring"} |= "ERROR"`.
 
