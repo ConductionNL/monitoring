@@ -9,18 +9,29 @@ alloy:
     name: alloy-config
     key: config.alloy
 
+  # -- /var/log van de host read-only mounten. Zonder dit mount de pod alleen
+  # /etc/alloy en bestaan de podlogs domweg niet in de container: de pipeline
+  # draait dan zonder fout en levert stil niets op. De chart regelt de hostPath
+  # en de readOnly-vlag zelf.
+  mounts:
+    varlog: true
+
+  # -- Resources per Alloy pod.
+  # LET OP: dit hoort onder `alloy:`, niet op topniveau. Stond het daar (t/m
+  # 2026-08-11), dan negeerde de chart het en draaide de container met
+  # `resources: {}` — geen requests, geen limits, dus geen enkele garantie bij
+  # node-druk. Gecontroleerd op de live DaemonSet.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
 # -- DaemonSet: één Alloy pod per node voor volledige log-dekking
 controller:
   type: daemonset
-
-# -- Resources per Alloy pod
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 256Mi
 
 # -- Tolerations: schedule op alle nodes (inclusief control-plane als gewenst)
 # tolerations:

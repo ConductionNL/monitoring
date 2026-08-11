@@ -46,18 +46,38 @@ data:
         target_label  = "node"
       }
 
-      // Log-pad op de node afleiden
+      // Log-pad op de node afleiden.
+      //
+      // De `regex` is hier niet optioneel. `$1` en `$2` in `replacement`
+      // verwijzen naar capture-groepen van die regex, NIET naar de
+      // source_labels. Zonder expliciete regex geldt de default `(.*)`: dan
+      // valt de hele string "<uid>/<container>" in $1 en blijft $2 leeg, wat
+      // paden oplevert als /var/log/pods/*<uid>/<container>//*.log — let op de
+      // dubbele slash. Aangetoond op 2026-08-11: Alloy logde per container
+      // "failed to tail file, stat failed".
       rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-        target_label  = "__path__"
         separator     = "/"
+        regex         = "(.+)/(.+)"
+        target_label  = "__path__"
         replacement   = "/var/log/pods/*$1/$2/*.log"
       }
     }
 
+    // -- Globs uitklappen naar echte bestanden.
+    // loki.source.file doet dat niet zelf: die stat het pad letterlijk, dus
+    // een target met een `*` erin faalt altijd. local.file_match zit ertussen
+    // en zet elk glob-patroon om in de bestanden die er echt zijn.
+    local.file_match "pod_logs" {
+      path_targets = discovery.relabel.pod_logs.output
+    }
+
     // -- Lezen van logbestanden op de node
+    // Vereist dat /var/log van de host gemount is: zie alloy.mounts.varlog in
+    // loki/alloy-values.yaml. Zonder die mount bestaan deze paden niet in de
+    // container en levert de pipeline stil niets op.
     loki.source.file "pod_logs" {
-      targets    = discovery.relabel.pod_logs.output
+      targets    = local.file_match.pod_logs.targets
       forward_to = [loki.write.default.receiver]
     }
 
