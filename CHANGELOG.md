@@ -4,6 +4,39 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-11 (Alloy verzamelde niets: logpad, glob-expansie en de ontbrekende mount)
+
+Na de replicatiefactor-fix antwoordde Loki wél (`/loki/api/v1/labels` → 200)
+maar was er **geen enkel logbericht** binnengekomen: nul namespaces met logs,
+terwijl Alloy 10/10 ready stond. Drie oorzaken, alle drie stil.
+
+- `loki/alloy-config.yaml`, relabel naar `__path__`: `$1` en `$2` in een
+  `replacement` verwijzen naar capture-groepen van de `regex`, niet naar de
+  `source_labels`. Zonder expliciete regex gold de default `(.*)`, dus viel de
+  hele string `<uid>/<container>` in `$1` en bleef `$2` leeg. Resultaat: paden
+  als `/var/log/pods/*<uid>/<container>//*.log`, met dubbele slash. Alloy logde
+  per container `failed to tail file, stat failed`. Nu `regex = "(.+)/(.+)"`.
+- `loki/alloy-config.yaml`, ontbrekende `local.file_match`: `loki.source.file`
+  klapt globs niet uit maar stat het pad letterlijk, dus een target met een `*`
+  erin faalt altijd — ook met een correct pad. `local.file_match` zit er nu
+  tussen en zet elk patroon om in de bestanden die echt bestaan.
+- `loki/alloy-values.yaml`, ontbrekende hostmount: de DaemonSet mountte
+  **alleen** `/etc/alloy`. De podlogs bestonden dus niet in de container.
+  `alloy.mounts.varlog: true` laat de chart `/var/log` read-only mounten;
+  gecontroleerd in de render (`varlog:/var/log ro=true`).
+
+**En hetzelfde nestingsprobleem als bij `deploymentMode`:** het
+`resources`-blok stond op topniveau in plaats van onder `alloy:`. De chart
+negeerde het en de live DaemonSet draaide met `resources: {}` — geen requests,
+geen limits, dus geen enkele garantie bij node-druk. Verplaatst en geverifieerd
+in de render (`requests.cpu: 50m` staat er nu echt op).
+
+Vierde tot en met zesde defect uit de geporte branch. Het patroon is nu
+onmiskenbaar: waardes op de verkeerde nestingsdiepte worden stil genegeerd, en
+een pipeline die "draait" bewijst niets. De enige gate die deze klasse fouten
+vangt is de gerenderde output nakijken op het veld dat je bedoelde, en daarna
+end-to-end meten of er data aankomt.
+
 ### Gewijzigd — 2026-08-11 (Loki: replicatiefactor op 1 — queries faalden)
 
 Bij de eerste echte uitrol kwam Loki omhoog (`loki-0` ready in 20s, 0 restarts,
