@@ -46,6 +46,11 @@ monitoring/
 
 - **GitOps**: Argo CD haalt de Helm chart `kube-prometheus-stack` en past jullie values toe. Geen lokaal `helm install`. Zie `apps/app-prom-prod.yaml` voor alle sources (`prometheus/rules/*`, `grafana/dashboards`, `alerting`, values).
 - **Configuratie in Git**: Stack-values in `stack/values.yaml`; dashboards in `grafana/dashboards/`; Prometheus-rules in `prometheus/rules/`; Alertmanager in `alerting/`. Zie `prometheus/README.md` en `grafana/README.md`.
+- **Twee soorten wijzigingen, en dat verschil bijt.** Alles wat Argo CD *uit* een source leest — values, rules, dashboards, manifests — pikt hij na een merge zelf op. Maar de Application-spec zélf (`apps/app-*.yaml`: `targetRevision` van een chart, een nieuwe `source`, `syncPolicy`) beheert Argo hier niet. Die wijziging staat na de merge alleen in git tot een mens hem eenmalig applyt:
+
+      kubectl -n argocd apply -f apps/app-<naam>.yaml
+
+  Sla je dat over, dan blijft de Application op de oude chart- of sourceversie staan en meldt hij vrolijk `Synced/Healthy` — want hij is synchroon met zijn eigen, verouderde spec. Twee keer op gelopen: bij het toevoegen van de source `prometheus/rules/argocd` (2026-08-10) en bij de alloy-chartbump (2026-08-12). Controleer na zo'n merge dus `kubectl -n argocd get application <naam> -o jsonpath='{.status.sync.revisions}'` en kijk of de chartversie er echt in staat.
 - **Secrets**: SOPS (age). Slack webhook in `alerting/secret-alertmanager.sops.yaml`; lokaal genereren via `./bootstrap_sops.sh`.
 
 ## Bootstrap (lokaal, vóór eerste commit)

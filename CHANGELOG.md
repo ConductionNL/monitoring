@@ -4,6 +4,25 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Toegevoegd — 2026-08-12 (README: Application-spec vergt een handmatige apply)
+
+Bij de alloy-bump wachtte ik tien minuten op een uitrol die nooit kwam: Argo
+stond op de juiste git-revisie maar rapporteerde de chart nog op `0.12.0`, en
+meldde daarbij `Synced/Healthy`. Klopt ook — hij was synchroon met zijn eigen,
+verouderde Application-spec.
+
+Het verschil dat dit veroorzaakt stond nergens uitgelegd: alles wat Argo *uit*
+een source leest (values, rules, dashboards, manifests) pikt hij na een merge
+zelf op, maar de Application-spec zelf (`apps/app-*.yaml`: `targetRevision`,
+een nieuwe `source`, `syncPolicy`) beheert Argo hier niet. Die blijft na de
+merge in git staan tot iemand hem applyt.
+
+- `README.md`: dat onderscheid expliciet, met het apply-commando en de controle
+  (`.status.sync.revisions` nakijken op de chartversie). Twee keer op gelopen —
+  bij de source `prometheus/rules/argocd` (2026-08-10) en bij deze bump.
+- `docs/index.md`: een verwijzing bij de Loki-Application, want daar kijk je als
+  eerste.
+
 ### Gewijzigd — 2026-08-12 (alloy-chart 0.12.0 → 1.11.1; Loki blijft staan)
 
 Eerste van twee chart-bumps, bewust los. Alloy eerst omdat de blast radius

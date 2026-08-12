@@ -36,7 +36,9 @@ Dit dossier beschrijft welke alerts we hebben, wat ze betekenen en hoe je ze tes
 ## Logverzameling (Loki + Alloy)
 - **Loki** slaat logs op; **Alloy** draait als DaemonSet en stuurt de podlogs
   van elke node naar Loki. Beide worden uitgerold door de Argo CD-Application
-  `apps/app-loki-prod.yaml` in namespace `monitoring`.
+  `apps/app-loki-prod.yaml` in namespace `monitoring`. Let op: een wijziging in
+  díé file (chartversie, sources) vergt na de merge één handmatige
+  `kubectl -n argocd apply` — zie de uitleg in `README.md`.
 - **Wat er verzameld wordt:** alle podlogs, met labels `namespace`, `pod`,
   `container` en `node`. De namespace `kube-system` is uitgesloten. De
   exclusielijst staat in `loki/alloy-config.yaml`.
