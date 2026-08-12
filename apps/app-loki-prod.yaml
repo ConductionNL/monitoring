@@ -20,7 +20,12 @@ spec:
   # 2. Alloy Helm chart met values uit Git
   - repoURL: https://grafana.github.io/helm-charts
     chart: alloy
-    targetRevision: 0.12.0
+    # Vooraf gecontroleerd bij de bump naar 1.11.1 (2026-08-12), zie CHANGELOG:
+    # onze vier values-instellingen overleven de chart-major, de config is
+    # geldig tegen de alloy-binary v1.18.1, en quay.io is bereikbaar voor de
+    # nieuwe reloader-sidecar. Loki blijft bewust op 6.29.0: die bump is een
+    # aparte stap met huiswerk op schemaConfig.
+    targetRevision: 1.11.1
     helm:
       releaseName: alloy
       valueFiles:
