@@ -1,5 +1,5 @@
 ---
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-11
 owner: info@conduction.nl
 ---
 
@@ -15,6 +15,16 @@ woord "pipeline". De alert komt niet uit Prometheus maar uit **Grafana
 Unified Alerting**, dat een LogQL-query op de Loki-datasource evalueert.
 Dit is de enige alert in deze repo die op logregels vuurt in plaats van op
 metrics.
+
+## Status: vooruitgeschoven post, geen dode config
+**Er is nog geen `hydra`-namespace in dit cluster** (gecontroleerd 2026-08-11:
+nul namespaces die op `hydra` matchen). De regel staat daarom permanent in
+`noDataState: OK` en meldt niets — dat is bedoeld en geen storing. Hij is
+bewust blijven staan: zodra Hydra er wél is, werkt de alert meteen en ligt dit
+runbook er al. Zie je hem op `No data` of `OK` staan, ga dan niet zoeken naar
+een kapotte pipeline; controleer eerst of de namespace bestaat met
+`kubectl get ns | grep hydra`. Wil je hem tóch weg, verwijder dan de regel én
+dit runbook — `scripts/verify.sh` eist een runbook per alert.
 
 ## Trigger
 - `count_over_time({namespace=~"hydra.*"} |= "ERROR" |= "pipeline" [5m]) > 0` (for: 5m)
