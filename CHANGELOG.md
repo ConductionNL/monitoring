@@ -4,6 +4,47 @@ Alle belangrijke wijzigingen aan deze repo worden hier vastgelegd. Formaat gebas
 
 ## [Unreleased]
 
+### Gewijzigd — 2026-08-12 (alloy-chart 0.12.0 → 1.11.1; Loki blijft staan)
+
+Eerste van twee chart-bumps, bewust los. Alloy eerst omdat de blast radius
+kleiner is: stopt Alloy met verzamelen, dan blijft alles wat al in S3 staat
+bevraagbaar. Een Loki-major raakt het opslagformaat en dus de historie.
+
+`alloy` gaat van 0.12.0 (appVersion v1.7.0, feb 2025) naar **1.11.1**
+(appVersion v1.18.1) — een chart-major over elf app-minors. Na de negen stille
+nestingsfouten van gisteren is dit niet blind gedaan; vooraf gecontroleerd:
+
+- **Onze vier values-instellingen overleven de major.** Gerenderd met
+  `helm template` op beide versies: image `v1.18.1`, `/etc/alloy` én `/var/log`
+  gemount (`alloy.mounts.varlog`), `requests.cpu: 50m` staat op de container
+  (`alloy.resources`), en de externe ConfigMap `alloy-config` wordt nog
+  gehonoreerd. Zelfde zes resource-soorten.
+- **De config is geldig tegen de nieuwe binary.** `alloy validate` in
+  `grafana/alloy:v1.18.1` geeft exit 0 op `loki/alloy-config.yaml`. Met een
+  negatieve test gecontroleerd dat die validator echt iets doet: een config met
+  een niet-bestaande target geeft exit 1 en `validation failed`.
+  `local.file_match`, `discovery.relabel` en `loki.write` zijn dus niet
+  stilzwijgend gewijzigd.
+- **De reloader-sidecar verhuist van registry** en dat was het echte risico:
+  `ghcr.io/jimmidyson/configmap-reload:v0.14.0` wordt
+  `quay.io/prometheus-operator/prometheus-config-reloader:v0.91.0` (op digest
+  gepind), met andere vlaggen (`--watched-dir`, `--reload-url`) en hogere
+  resources (10m/50Mi tegenover 1m/5Mi). Dit cluster pullt al van **79**
+  quay.io-containers, waaronder Argo CD zelf, dus dat registry is bereikbaar.
+  Was dat niet zo, dan was de sidecar in ImagePullBackOff gegaan, waren de
+  Alloy-pods nooit ready geworden en had de logcollectie stilgestaan.
+- Verder nieuw in de DaemonSet: env `K8S_NODE_NAME` uit `spec.nodeName`, en
+  `allowPrivilegeEscalation: false` op de sidecar. Totale diff 33 regels.
+
+**Testgotcha voor de volgende keer:** `helm template` zonder `-n` zet
+`metadata.namespace: default` in de output, wat eruitziet als een regressie. Met
+`-n monitoring` staat er `monitoring`, en dat is wat Argo doet. Render dus met de
+doelnamespace, anders jaag je op een fout die er niet is.
+
+Verifiëren na de sync: `kubectl -n monitoring rollout status ds/alloy`, daarna
+dat er geen `stat failed` in de pod-logs staat en dat een query in Loki nog
+verse regels geeft.
+
 ### Gewijzigd — 2026-08-11 (restjes uit drie oude branches verwerkt, daarna opgeruimd)
 
 Drie branches lagen nog los. Wat er bruikbaar in zat is hier verwerkt, de rest
